@@ -1,9 +1,79 @@
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { FiChevronDown } from 'react-icons/fi'
 import { experience, education, certifications } from '../data/experience'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+}
+
+function ExperienceRow({ job, index }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <motion.div variants={fadeUp} transition={{ delay: index * 0.05 }} className="relative pb-8 pl-14">
+      {index !== experience.length - 1 && (
+        <span className="absolute left-5 top-10 h-[calc(100%-1.5rem)] w-px bg-border" />
+      )}
+
+      <span
+        style={{ background: job.color }}
+        className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full font-display text-sm font-semibold text-white"
+      >
+        {job.initial}
+      </span>
+
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-4 text-left"
+      >
+        <div>
+          <p className="font-display font-semibold text-text">{job.company}</p>
+          <p className="text-sm text-muted">{job.role}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-3">
+          <span className="font-mono text-xs text-muted">{job.period}</span>
+          <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.25 }}>
+            <FiChevronDown className="text-muted" size={16} />
+          </motion.span>
+        </div>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="overflow-hidden"
+          >
+            <p className="mt-4 text-sm italic leading-relaxed text-muted">{job.tagline}</p>
+            <ul className="mt-3 space-y-2">
+              {job.bullets.map((b) => (
+                <li key={b} className="flex gap-2 text-sm leading-relaxed text-muted">
+                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-muted" />
+                  {b}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {job.tags.map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full border border-border bg-bg px-2.5 py-1 font-mono text-[11px] text-muted"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  )
 }
 
 export default function Experience() {
@@ -29,41 +99,23 @@ export default function Experience() {
         Where I&apos;ve worked
       </motion.h2>
 
-      <div className="relative space-y-10 border-l border-border pl-8">
+      <motion.div
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={{ show: { transition: { staggerChildren: 0.08 } } }}
+      >
         {experience.map((job, i) => (
-          <motion.div
-            key={job.role}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeUp}
-            transition={{ delay: i * 0.05 }}
-            className="relative"
-          >
-            <span className="absolute -left-[2.28rem] top-1.5 h-2.5 w-2.5 rounded-full border-2 border-accent bg-bg" />
-            <p className="font-mono text-xs text-muted">{job.period}</p>
-            <h3 className="mt-1 font-display text-lg font-semibold text-text">{job.role}</h3>
-            <p className="text-sm text-accent2">
-              {job.org} · {job.location}
-            </p>
-            <ul className="mt-3 space-y-2">
-              {job.bullets.map((b) => (
-                <li key={b} className="flex gap-2 text-sm leading-relaxed text-muted">
-                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-muted" />
-                  {b}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
+          <ExperienceRow key={job.company} job={job} index={i} />
         ))}
-      </div>
+      </motion.div>
 
       <motion.div
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.3 }}
         variants={fadeUp}
-        className="mt-14 grid gap-6 border-t border-border pt-10 sm:grid-cols-2"
+        className="mt-4 grid gap-6 border-t border-border pt-10 sm:grid-cols-2"
       >
         <div>
           <p className="font-mono text-xs uppercase tracking-wide text-muted">Education</p>
