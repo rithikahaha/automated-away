@@ -1,12 +1,13 @@
 export const experience = [
   {
-    company: 'Wayfair',
-    initial: 'W',
-    color: '#7F1084',
+    company: 'Extern',
+    client: 'Wayfair',
+    initial: 'E',
+    color: '#4C1D95',
     role: 'AI Agent Engineering & BI Extern',
     period: '2026 - Now',
     tagline:
-      "Wiring AI workflows into Wayfair's Rugs category so trend and competitor tracking stop living in five different tabs.",
+      "Externed with Wayfair's Rugs category, wiring in AI workflows so trend and competitor tracking stop living in five different tabs.",
     bullets: [
       'Automated 3 Gemini-powered workflows, cutting manual report verification from five steps to two.',
       'Rolled trend, competitor, and insight tracking into one live dashboard — a single source of truth instead of scattered spreadsheets.',
@@ -14,13 +15,14 @@ export const experience = [
     tags: ['Google Gemini', 'Automation', 'Dashboards'],
   },
   {
-    company: 'Amazon',
-    initial: 'A',
-    color: '#FF9900',
+    company: 'Extern',
+    client: 'Amazon',
+    initial: 'E',
+    color: '#4C1D95',
     role: 'Operational Strategy & People Analytics Extern',
     period: '2026',
     tagline:
-      'Dug through a thousand-plus feedback records to find where employee experience was actually breaking, not where everyone assumed it was.',
+      'Externed with Amazon, digging through a thousand-plus feedback records to find where employee experience was actually breaking, not where everyone assumed it was.',
     bullets: [
       'Ran sentiment analysis across 14 workforce metrics (Python, Pandas, NLTK, VADER) across 3 operational teams.',
       'Automated the data-cleaning pipeline, cutting quality checks from 3 hours to under 45 minutes.',

@@ -29,7 +29,14 @@ function ExperienceRow({ job, index }) {
         className="flex w-full items-center justify-between gap-4 text-left"
       >
         <div>
-          <p className="font-display font-semibold text-text">{job.company}</p>
+          <p className="font-display font-semibold text-text">
+            {job.company}
+            {job.client && (
+              <span className="ml-2 font-mono text-[11px] font-normal text-accent2">
+                · client: {job.client}
+              </span>
+            )}
+          </p>
           <p className="text-sm text-muted">{job.role}</p>
         </div>
         <div className="flex shrink-0 items-center gap-3">
