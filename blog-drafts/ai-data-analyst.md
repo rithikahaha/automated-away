@@ -65,11 +65,18 @@ tools: Read, Grep, Glob, Bash, Agent
 - qa-reviewer, sanity-checks any result before it's presented as fact.
 
 ## Process
-1. Clarify the question. If a term is ambiguous, check the glossary first.
-2. Route it based on what the question actually needs.
-3. Sanity-check via qa-reviewer.
-4. Visualize when it helps.
-5. Synthesize: plain English first, then number, chart, SQL, then "so what."
+This follows the standard six-phase data-analysis workflow, so a fast answer
+never skips the steps that make it a trustworthy one.
+1. Ask. Understand the actual business problem, not just the literal
+   question. Ground ambiguous terms against the glossary instead of guessing.
+2. Prepare. Confirm the right data exists and is trustworthy before
+   analyzing it, and flag known data-quality issues up front.
+3. Process. Clean and validate before trusting any number: nulls, duplicate
+   joins from fan-out, referential integrity, row counts that don't add up.
+4. Analyze. Route to whichever specialist owns the actual method.
+5. Share. A chart, if it makes the answer clearer than a table would.
+6. Act. Close with "so what," a plain-English answer and its business
+   implication, not just a restated stat.
 
 ## Output shape
 Answer, why it matters, evidence, query, caveats. Never fabricate a number
@@ -78,6 +85,7 @@ you did not get from a query.
 
 **Line by line:**
 - `tools: Read, Grep, Glob, Bash, Agent`: this list in the frontmatter is a permission list. `Agent` is the one that matters most here, it's what lets this file call the other 6 agents. No specialist agent below has this permission.
+- The six phases (Ask, Prepare, Process, Analyze, Share, Act) are the standard shape of a real analytics workflow, not something invented for this project. Naming them explicitly is what stops a fast AI answer from quietly skipping the "boring" middle steps, confirming the data is trustworthy and cleaning it, that people forget when they're excited about the analysis part.
 - "Never fabricate a number you did not get from a query" is a literal instruction in the file, not something I'm paraphrasing. It's there because an LLM will confidently guess a plausible-sounding number if you don't explicitly forbid it.
 
 ### sql-engineer, the specialist
@@ -730,12 +738,25 @@ The design is deliberately swap-friendly: every agent and skill talks to `connec
 AI wrote the SQL, the Python, the dbt models. Here's what it didn't decide:
 
 - **The domain.** B2B SaaS with seat-based accounts, chosen specifically so it wouldn't overlap with my other portfolio projects.
-- **7 agents, not 11.** I rejected the first version (11 narrow agents, one per skill) because that isn't how a real team is structured, and had it rebuilt around actual job titles.
+- **7 agents, not 11.** The project originally had 11 narrow agents, one per skill. I rejected that as unrealistic, no real company staffs a team that way, and had it rebuilt around 7 roles that map to actual job titles.
+- **Cutting an MLOps agent entirely.** An early draft had a dedicated agent for model registry and drift detection. I cut it, not because the code didn't work, but because it was a stretch past what a Data Analyst role actually needs. Scope is a decision, not just a feature list.
 - **AUC over accuracy** for the churn model, because churn is imbalanced and accuracy would lie.
 - **Catching the funnel chart bug**, by opening the actual dashboard and looking, instead of trusting that error-free code meant correct output.
 - **Running the significance test instead of trusting the eyeball comparison** on the 35% churn number, and reporting p=0.075 honestly instead of a fake win.
 - **The read-only guard as a hard requirement**, not a nice-to-have, because an agent with write access to a real warehouse is a genuinely different risk profile.
 - **Keeping the cloud deployment as documentation, not action.** Every agent instruction file explicitly forbids provisioning real infrastructure. That boundary was a deliberate design choice, not a limitation Claude imposed on itself.
+
+Stated as a direct split, the same way I'd answer it in an interview:
+
+| AI (Claude Code) did | I decided |
+|---|---|
+| Wrote the SQL, Python, and dbt models | Which business questions were even worth answering |
+| Drafted the agent instructions | Which agent roster actually maps to a real team (rejected the first draft) |
+| Ran the stats test | Whether "not significant" should be reported honestly instead of buried |
+| Built the dashboard | Whether the dashboard's chart order was actually correct (it wasn't, first try) |
+| Suggested the churn model features | Whether MLOps belonged in scope at all (it didn't) |
+
+**Connecting a real warehouse, if this ever needed to leave the sample data behind:** every agent talks to the warehouse only through `connectors/warehouse.py`. Swapping the local SQLite sample for a real Postgres, Snowflake, or BigQuery warehouse means changing one `DATABASE_URL` value, nothing about the agents, the SQL they write, or the read-only guard needs to change at all. That single point of contact is itself a decision, not an accident, it's what makes "connect this to a real warehouse" a config change instead of a rewrite.
 
 ## Is this data real?
 
@@ -749,7 +770,7 @@ What this demonstrates isn't "I found a $100k insight." It's "I can build the sy
 Because deciding what was worth building, structuring the agents around real team roles, and catching it when it was wrong (twice, with receipts) is not something the AI did on its own. That's the part I own.
 
 **"Why split into 7 agents instead of one prompt?"**
-A generalist prompt trying to be equally good at SQL, statistics, and infrastructure ends up mediocre at all three. Splitting by role also lets me scope permissions tightly, `sql-engineer` literally cannot call other agents or write to the database.
+A generalist prompt trying to be equally good at SQL, statistics, and infrastructure ends up mediocre at all three. Splitting by role also lets me scope permissions tightly, `sql-engineer` literally cannot call other agents or write to the database. It was actually 11 agents at first, one per skill, which isn't how a real team is structured. I also cut a dedicated MLOps agent entirely once I recognized model-registry and drift-detection tooling was a stretch past what a Data Analyst role needs, not because the code didn't work.
 
 **"Walk me through a bug you caught."**
 The funnel chart rendered stages alphabetically instead of in sequence. It ran with no errors and looked fine at a glance. I only caught it by opening the actual dashboard and checking every chart before calling the feature done, which is exactly the habit this project is built to reinforce.
@@ -774,7 +795,7 @@ Point this at a real, messier, unowned warehouse instead of one I control. That'
 
 ## The stack
 
-Python, SQL, Claude Code (7 agents, 6 skills), dbt (28 test assertions across 8 models), pytest (24 tests), GitHub Actions, Streamlit + Altair, scikit-learn, TF-IDF retrieval, Terraform (unapplied).
+Python, SQL, Claude Code (7 agents, 6 skills), dbt (40 checks across 8 models), pytest (24 tests), GitHub Actions, Streamlit + Altair, scikit-learn, TF-IDF retrieval, Terraform (unapplied).
 
 **Live dashboard:** [ai-data-analyst-claude-code.streamlit.app](https://ai-data-analyst-claude-code.streamlit.app/)
 **Code:** [github.com/rithikahaha/AI-Data-Analyst-Claude-Code](https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code)
