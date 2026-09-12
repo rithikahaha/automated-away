@@ -12,7 +12,7 @@ export default function Projects() {
         transition={{ duration: 0.6 }}
         className="mb-3 font-mono text-sm text-accent"
       >
-        02 · projects
+        03 · projects
       </motion.p>
 
       <motion.h2

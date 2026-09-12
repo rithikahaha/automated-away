@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 
 const links = [
   { href: '#about', label: 'About' },
+  { href: '#experience', label: 'Experience' },
   { href: '#projects', label: 'Projects' },
   { href: '#contact', label: 'Contact' },
 ]
@@ -37,6 +38,16 @@ export default function Nav() {
               </a>
             </li>
           ))}
+          <li>
+            <a
+              href="/resume.pdf"
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-full border border-border px-3.5 py-1.5 text-text transition-colors hover:border-accent hover:text-accent"
+            >
+              Resume
+            </a>
+          </li>
         </ul>
       </nav>
     </motion.header>

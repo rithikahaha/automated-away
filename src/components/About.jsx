@@ -1,18 +1,5 @@
 import { motion } from 'framer-motion'
 
-const stack = [
-  'Python',
-  'SQL',
-  'Pandas',
-  'PySpark',
-  'Snowflake',
-  'Tableau',
-  'Power BI',
-  'Statistics',
-  'Claude Code',
-  'Streamlit',
-]
-
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
@@ -50,27 +37,14 @@ export default function About() {
           well. Mostly.
         </motion.p>
         <motion.p variants={fadeUp}>
+          Currently an AI Agent Engineering &amp; Business Intelligence extern
+          working with Wayfair, after a stint doing people analytics for
+          Amazon and a systems traineeship at Infosys.
+        </motion.p>
+        <motion.p variants={fadeUp}>
           Beyond that: mixing music nobody asked for, and chasing whatever&apos;s
           interesting this month.
         </motion.p>
-      </motion.div>
-
-      <motion.div
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.3 }}
-        variants={{ show: { transition: { staggerChildren: 0.04 } } }}
-        className="mt-10 flex flex-wrap gap-2.5"
-      >
-        {stack.map((s) => (
-          <motion.span
-            key={s}
-            variants={fadeUp}
-            className="rounded-full border border-border bg-surface px-3.5 py-1.5 font-mono text-xs text-muted"
-          >
-            {s}
-          </motion.span>
-        ))}
       </motion.div>
     </section>
   )

@@ -32,7 +32,7 @@ export default function Contact() {
         transition={{ duration: 0.6 }}
         className="mb-3 font-mono text-sm text-accent"
       >
-        03 · contact
+        05 · contact
       </motion.p>
 
       <motion.h2

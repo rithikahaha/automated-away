@@ -70,7 +70,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.4 }}
-        className="mt-9 flex items-center gap-4"
+        className="mt-9 flex flex-wrap items-center justify-center gap-3"
       >
         <a
           href="#projects"
@@ -83,6 +83,14 @@ export default function Hero() {
           className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
         >
           Get in touch
+        </a>
+        <a
+          href="/resume.pdf"
+          target="_blank"
+          rel="noreferrer"
+          className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+        >
+          Resume
         </a>
       </motion.div>
 
