@@ -1,18 +1,18 @@
 # I Gave a Team of AI Agents My Job for a Week. Here's Where I Caught Them Lying.
 
-I do data analysis for a living, and I got tired of spending 40 minutes writing SQL and building charts to answer a question someone typed in five seconds. So I built a team of AI agents on Claude Code that answers business questions in plain English, with real numbers, a chart, and honest caveats. This is the full walkthrough: the architecture, the actual code behind it, and two real mistakes I caught along the way.
+I do data analysis for a living, and I got tired of spending 40 minutes writing SQL (the language used to ask questions of a database) and building charts to answer a question someone typed in five seconds. So I built a team of AI agents on Claude Code, Anthropic's AI coding tool, that answers business questions in plain English, with real numbers, a chart, and honest caveats. This is the full walkthrough: the architecture, the actual code behind it, and two real mistakes I caught along the way. You don't need to read code to follow it, every technical term gets a quick plain-English gloss the first time it shows up.
 
 ## What it actually does
 
 - Takes a plain-English business question and routes it to whichever specialist agent owns that kind of work
-- Answers with a number, a chart, the SQL that produced it, and any caveats, never a bare stat
+- Answers with a number, a chart, the database query that produced it, and any caveats, never a bare stat
 - Runs against a realistic sample B2B SaaS dataset: accounts, users, subscriptions, product usage events
 - Backed by 40 automated data-quality checks and a 24-test suite on every code change
 - Refuses to fabricate a number it didn't get from a query
 
 ## Why 7 agents instead of 1 prompt
 
-One AI trying to be equally good at SQL, statistics, and infrastructure ends up mediocre at all three.
+One AI trying to be equally good at database queries, statistics, and infrastructure ends up mediocre at all three, the same way one person can't be the best at every job on a team.
 
 - `analyst-lead`, the only one you talk to, routes everything else
 - `sql-engineer`, schema lookup and query writing, cannot call other agents
@@ -39,7 +39,7 @@ Prepare and Process are the ones people skip when they're excited about the AI p
 
 ## The warehouse guardrail
 
-Every agent that touches data goes through one file. It cannot write.
+Every agent that touches data goes through one checkpoint. It's physically not allowed to change anything, only look.
 
 ```python
 _ALLOWED_STATEMENT = re.compile(r"^\s*(WITH|SELECT|EXPLAIN)\b", re.IGNORECASE)
@@ -50,9 +50,9 @@ def run_query(sql):
     return pd.read_sql(sql, connection)
 ```
 
-- The regex only matches text starting with `WITH`, `SELECT`, or `EXPLAIN`
-- Anything else, `DELETE`, `DROP`, `UPDATE`, gets rejected in Python before it ever reaches the database
-- This is the entire defense against an AI agent with database access and a bad prompt, and it's tested explicitly (`test_read_only_guard_blocks_writes`)
+- That first line is a regex, a pattern-matching rule for text, that only lets a question through if it starts with a word meaning "look something up," never "change" or "delete"
+- Anything that tries to modify or remove data gets rejected in code before it ever reaches the actual database
+- This is the entire defense against an AI agent with database access and a bad prompt, and it's proven to work with an automated test that tries to break it on purpose
 
 ## Getting from raw data to a warehouse
 
@@ -81,7 +81,7 @@ def main():
 
 ## Data quality, two layers
 
-**Layer 1, Python, runs during load:**
+**Layer 1, a Python check, runs while data is being loaded in:**
 
 ```python
 def check_referential_integrity(child_df, child_key, parent_df, parent_key, name):
@@ -89,7 +89,7 @@ def check_referential_integrity(child_df, child_key, parent_df, parent_key, name
     return CheckResult(check=name, passed=not orphans)
 ```
 
-**Layer 2, dbt, runs against the built warehouse:**
+**Layer 2, dbt (a tool that runs a checklist of automatic tests against a database), runs against the finished data:**
 
 ```yaml
 - name: event_type
@@ -99,8 +99,8 @@ def check_referential_integrity(child_df, child_key, parent_df, parent_key, name
                   "invited_teammate", "used_integration", "login"]
 ```
 
-- 8 dbt models, 40 total checks, all passing
-- Python checks run once during load and can halt the pipeline. dbt tests run against the final tables and are what an agent implicitly trusts on every query. Belt and suspenders
+- 8 dbt models, 40 total checks, all passing, this one specifically confirms every event is one of the 6 expected types, catching a typo before it corrupts an analysis
+- The Python check runs once during load and can halt the pipeline. dbt tests run against the final tables and are what an agent implicitly trusts on every query. Belt and suspenders
 
 ## Grounding ambiguous terms instead of guessing
 
@@ -112,9 +112,9 @@ def retrieve(query, top_k=1, min_score=0.05):
     return [chunk for chunk, score in ranked[:top_k] if score >= min_score]
 ```
 
-- TF-IDF retrieval over a metrics glossary, no external API key required
-- If nothing scores above the threshold, it returns nothing, callers must treat that as "not covered," never invent a definition
-- Stops two different questions from silently using two different definitions of "active" and producing numbers that don't agree
+- This is a lightweight text-search technique (TF-IDF, a way of matching a question to the most relevant paragraph in a glossary document) that needs no external AI service to run
+- If nothing matches well enough, it returns nothing on purpose, the rule is "not covered" is a valid answer, never invent a definition
+- Stops two different questions from silently using two different meanings of "active" and producing numbers that don't agree with each other
 
 ## The dashboard's numbers, straight from the queries
 
@@ -146,9 +146,9 @@ z = (p2 - p1) / se
 p_value = 2 * (1 - stats.norm.cdf(abs(z)))
 ```
 
-- A two-proportion z-test, for comparing two yes/no rates against each other
-- Also computes whether the sample was even large enough to detect a real effect (`underpowered`), separate from whether the result was significant
-- This exact function is what caught the churn "finding" below
+- This is a significance test (specifically a two-proportion z-test) for comparing two percentages, like two churn rates, and checking whether the gap between them is a real pattern or could just be random luck
+- It also checks whether there was even enough data to trust the answer either way, separate from whether the result looked significant
+- This exact calculation is what caught the churn "finding" below
 
 ## The churn model
 
@@ -157,15 +157,15 @@ CATEGORICAL_FEATURES = ["plan_tier", "industry", "region"]
 NUMERIC_FEATURES = ["current_seat_count", "distinct_feature_types_used",
                      "total_events_90d", "days_since_last_login"]
 
-pipeline = build_pipeline()  # GradientBoostingClassifier
+pipeline = build_pipeline()  # a model built from 200 small decision trees, voting together
 pipeline.fit(X_train, y_train)
 auc = roc_auc_score(y_test, pipeline.predict_proba(X_test)[:, 1])
 # auc = 0.6675
 ```
 
-- Same feature query trains the model and scores live accounts, one shared definition instead of two that could drift apart
-- Graded on AUC, not accuracy, because churn is imbalanced and accuracy would happily lie
-- 0.6675 is good enough to prioritize outreach, not good enough to be a crystal ball, and nothing in the output claims otherwise
+- Same feature list trains the model and scores live accounts, one shared definition instead of two that could quietly drift apart
+- Graded on AUC (a score from 0.5 to 1 measuring how well the model ranks risky accounts above safe ones, 0.5 is a coin flip, 1 is perfect), not plain accuracy, because most accounts don't churn, and accuracy would happily reward a model that just guesses "safe" every time
+- 0.6675 is good enough to prioritize which accounts to check on first, not good enough to be treated as certain, and nothing in the output claims otherwise
 
 ## Bug #1: the chart that lied
 
@@ -189,10 +189,10 @@ Integration-adopting accounts churned at 17.5% versus 27.1% for non-adopters, a 
 p_value = 0.075
 ```
 
-- Above the standard 0.05 cutoff, and the non-adopter group was only 59 accounts, small enough that the test flagged it as underpowered too
+- A p-value is the odds a gap this size could just be luck. 0.075 means a 7.5% chance, just above the usual 5% bar for calling something real, and the non-adopter group was only 59 accounts, small enough that the test flagged the sample as too small to be sure either way
 - Reported as "promising, not proven," not "found it." The exciting number would have sent someone chasing a pattern that might not be real
 
-## Tests and CI
+## Automated tests, run on every change
 
 ```yaml
 - name: Build the sample warehouse via the real pipeline
@@ -202,8 +202,8 @@ p_value = 0.075
 - run: pytest -v
 ```
 
-- 24 tests, run on every push
-- CI rebuilds the entire warehouse through the real pipeline before testing, so a broken pipeline gets caught, not just a broken query
+- 24 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration), no one has to remember to run them by hand
+- It rebuilds the entire sample database through the real pipeline before testing against it, so a broken pipeline gets caught, not just a broken individual query
 
 ## What was mine, not the AI's
 

@@ -1,14 +1,14 @@
 # Only 3.12% of Customers Ever Buy Again: What a Cohort Analysis Actually Found
 
-I expected the usual retention story on this one, customers drifting away gradually. A cohort analysis on 99,440 real Olist orders, a Brazilian e-commerce marketplace, showed a cliff instead. Here's the full pipeline: the architecture, every analysis, both models, and 2 places where I had two honest, competing answers instead of one clean one.
+I expected the usual retention story on this one, customers drifting away gradually. A cohort analysis (grouping customers by when they first bought something, then tracking who comes back) on 99,440 real Olist orders, a Brazilian e-commerce marketplace, showed a cliff instead. Here's the full pipeline: the architecture, every analysis, both models, and 2 places where I had two honest, competing answers instead of one clean one. No coding background needed, every technical term gets a plain-English explanation the moment it shows up.
 
 ## What this project does
 
-- Serverless pipeline on AWS: S3 for storage, Glue to auto-catalog the schema, Athena to run SQL directly against the files, no server to maintain
+- A serverless pipeline on Amazon's cloud (AWS): files sit in cheap cloud storage (S3), a tool automatically reads and catalogs their structure (Glue), and a query service (Athena) lets you ask database-style questions directly against those files, no server running 24/7 required
 - 7 statistical analyses: revenue trends, customer segmentation, payments, geography, satisfaction, cohort retention, RFM scoring
-- 3 ML models: delivery-delay prediction, review-score prediction, K-Means customer clustering
-- A live interactive dashboard on GitHub Pages, plus a 5-page Power BI report
-- CI that validates the pipeline's structure on every push
+- 3 machine learning models (software that learns patterns from past examples to make predictions on new ones): delivery-delay prediction, review-score prediction, and a model that groups similar customers together on its own
+- A live interactive dashboard, plus a 5-page Power BI report
+- Automated checks that run on every code change, catching a broken pipeline before it ships
 
 ## Joining the data
 
@@ -19,8 +19,8 @@ df = (orders
       .merge(reviews[['order_id', 'review_score']], on='order_id', how='left'))
 ```
 
-- Inner join for payments and customers, an order with no matching payment can't have revenue computed anyway
-- Left join for reviews, a missing review shouldn't drop an otherwise valid order
+- A "join" combines two tables using a shared ID column, like a very literal version of Excel's VLOOKUP. An "inner" join only keeps rows that match on both sides, used here for payments and customers, an order with no matching payment can't have revenue computed anyway
+- A "left" join keeps every row from the first table even without a match, used for reviews, since a missing review shouldn't drop an otherwise valid order
 
 ## Customer value, the simple way
 
@@ -28,7 +28,7 @@ df = (orders
 clv['value_segment'] = pd.qcut(clv['total_spent'], q=4, labels=['Low', 'Medium', 'High', 'VIP'])
 ```
 
-- Sorts every customer by total spend, then splits that sorted line into 4 equal-sized groups
+- `pd.qcut` sorts every customer by total spend, then slices that sorted line into 4 equal-sized groups
 - Not a fixed dollar rule, "top 25% of spenders" no matter what dollar amount that happens to be
 
 ## The retention cliff
@@ -54,7 +54,9 @@ correlation = repeat_customers['review_score'].corr(repeat_customers['num_orders
 - Essentially zero. A happy customer is not meaningfully more likely to come back
 - Combined with the retention cliff, this points at something structural about a multi-seller marketplace, not dissatisfaction, driving the lack of repeat purchases
 
-## RFM: quintile scoring vs. K-Means, and why they disagree
+## RFM: two ways to rank your best customers, two different answers
+
+RFM stands for Recency, Frequency, Monetary, how recently, how often, and how much someone bought. Below are two separate ways of using those three signals to rank customers, and they disagreed with each other.
 
 ```python
 rfm['r_score'] = pd.qcut(rfm['recency'], q=5, labels=[5, 4, 3, 2, 1])
@@ -69,8 +71,8 @@ rfm['cluster'] = kmeans.fit_predict(rfm_scaled)
 # silhouette score: 0.497
 ```
 
-- Quintile RFM puts the top 20% of customers into "Champion," averaging **2.1x** the overall spend
-- K-Means finds a much smaller, stricter cluster of genuine outliers, averaging nearly **7x**
+- The first method (quintile RFM) sorts customers and splits them into 5 equal groups per signal, then puts the top 20% overall into "Champion," averaging **2.1x** the overall spend
+- The second method uses K-Means, an algorithm that finds natural groupings in data entirely on its own, no categories given in advance. `StandardScaler` first puts recency, frequency, and spend on equal footing, so spend (measured in hundreds of dollars) doesn't unfairly dominate over frequency (measured in single digits). This finds a much smaller, stricter cluster of genuine outliers, averaging nearly **7x**
 - Both numbers are real, they're answering different questions, "top fifth" versus "genuine extremes"
 - Reported both, with the method attached to each. An earlier informal "4x" estimate had circulated before either number was actually verified, and neither matched it
 
@@ -80,9 +82,10 @@ rfm['cluster'] = kmeans.fit_predict(rfm_scaled)
 clf = RandomForestClassifier(n_estimators=200, max_depth=10, class_weight='balanced')
 ```
 
+- A Random Forest is a model made of many small decision trees voting together, a common, solid choice for this kind of yes/no prediction
 - Only about 8% of orders are actually late, so a naive model hits 92% accuracy by always predicting on-time, and catches zero real risk
-- `class_weight='balanced'` forces the model to pay real attention to the rare late-order examples
-- Result: accuracy drops to 78.2% on purpose, but ROC-AUC is 0.737 and recall on the late class is 53.7%, catching over half of real late deliveries before they happen
+- `class_weight='balanced'` forces the model to pay real attention to the rare late-order examples during training instead of ignoring them as noise
+- Result: accuracy drops to 78.2% on purpose, but a ranking score called ROC-AUC lands at 0.737 (0.5 is a coin flip, 1 is perfect), and it catches over half of real late deliveries before they happen
 
 ## Model 2: predicting review scores
 
@@ -91,11 +94,11 @@ reg = RandomForestRegressor(n_estimators=200, max_depth=10)
 # r2 = 0.216, rmse = 1.14 stars
 ```
 
-- R² of 0.216 means the model explains about a fifth of what drives a review score, modest, reported as modest
-- The more useful output was the feature ranking: `is_late` is the single strongest predictor of review score, ahead of price or freight cost by a wide margin
-- Fixing delivery reliability likely moves satisfaction more than anything else measurable in this dataset
+- This one predicts a number (a 1-to-5 star score) instead of a yes/no answer, so it's graded differently: R², a score from 0 to 1 for how much of the variation in review scores the model actually explains. 0.216 means about a fifth, modest, reported as modest
+- The more useful output was a side effect: whether an order arrived late is, by far, the strongest single signal for a bad review, stronger than price or shipping cost
+- Fixing delivery reliability likely moves customer satisfaction more than anything else measurable in this dataset
 
-## CI, without needing the real dataset
+## Automated checks, without needing the real dataset
 
 ```python
 tree = ast.parse(open("ecommerce_analysis.py").read())
@@ -103,8 +106,8 @@ functions = [node.name for node in ast.walk(tree) if isinstance(node, ast.Functi
 required = ["load_data", "build_analytical_dataset", "rfm_analysis", "cohort_retention_analysis"]
 ```
 
-- Reads the code's structure as text without running it, checking that key functions haven't been silently renamed or deleted
-- Runs on a small synthetic dataset built directly in the CI file, so the pipeline gets validated with no credentials and no 50MB download
+- This reads the code's own structure as plain text, without actually running it, like proofreading a recipe instead of cooking it, checking that key functions haven't been silently renamed or deleted
+- Runs against a small made-up dataset built directly into the check itself, so the pipeline gets validated automatically with no real credentials and no 50MB download needed
 
 ## Other real numbers
 

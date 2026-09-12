@@ -1,6 +1,6 @@
 # I Audited 180,519 Orders and Found a Promise That Was Broken 100% of the Time
 
-Checkout pages promise a delivery date. Almost nobody checks, at scale, whether operations can actually keep it. I ran a 5-stage audit across 180,519 real orders and 4 shipping tiers to find out. Here's every stage, the actual code and numbers behind each, and one honest inconsistency I caught in my own analysis.
+Checkout pages promise a delivery date. Almost nobody checks, at scale, whether operations can actually keep it. I ran a 5-stage audit across 180,519 real orders and 4 shipping tiers to find out. Here's every stage, the actual code and numbers behind each, and one honest inconsistency I caught in my own analysis. Every technical term gets a quick plain-English gloss the first time it comes up, no coding background needed to follow along.
 
 ## The 5 stages
 
@@ -10,7 +10,7 @@ Checkout pages promise a delivery date. Almost nobody checks, at scale, whether 
 - **Stage 4, Customer Segmentation**: is the damage hitting everyone, or just some
 - **Stage 5, A/B Test Simulation**: would fixing the promise actually work
 
-Every stage is implemented 3 ways, standalone SQL, a Pandas notebook, and a PySpark rewrite, and all 3 agree on the numbers.
+Every stage is implemented 3 separate ways: standalone SQL (the language for asking questions of a database), a Python notebook, and a version rewritten for PySpark (a tool for splitting work across many computers at once, more on that below), and all 3 agree on the numbers, which is itself a sanity check.
 
 ## Cleaning the data first
 
@@ -23,7 +23,7 @@ def load_and_clean(path):
     return df
 ```
 
-- `ISO-8859-1` encoding is required, several city and country names use accented characters, reading as plain UTF-8 crashes on this file
+- Computers store text as numbers and translate them back using an agreed lookup table called an encoding. This file uses an older one (`ISO-8859-1`), several city and country names have accented characters, and reading it with the modern default crashes instead of guessing wrong
 - Zero rows actually get dropped by the null-check here, all three critical columns were already clean, the check is defensive, not decorative
 
 ## Stage 1: Data Integrity
@@ -81,6 +81,8 @@ GROUP BY 1
 
 ## Stage 4: Systemic, Not Selective
 
+Before recommending a fix, I needed to know if the damage was concentrated on high-value customers (needing an urgent, targeted response) or spread evenly (an operations problem).
+
 ```sql
 WITH UserValue AS (
     SELECT "Customer Id", SUM("Order Item Total") AS total_spent,
@@ -101,6 +103,8 @@ GROUP BY 1
 
 ## Stage 5: Proving the Fix Works
 
+It's one thing to notice a promise is broken. It's another to prove fixing it would actually help. This runs a significance test (a formal check for whether an improvement is real or could be a coincidence) across all 4 tiers:
+
 ```python
 variant_estimate_days = math.ceil(subset["Days for shipping (real)"].mean())
 p1, p2 = control["success"].mean(), variant["success"].mean()
@@ -116,9 +120,9 @@ p_value = 2 * (1 - stats.norm.cdf(abs(z)))
 | Second Class | 2 days | 4 days | 20.4% | 59.9% | <0.001 |
 | Standard Class | 4 days | 4 days | 60.2% | 60.2% | 0.951 |
 
-- The new promise is computed dynamically per tier, the rounded-up average of that tier's own real delivery time, not an arbitrary number
-- 3 tiers recover to near-certain success at p < 0.001. Standard Class correctly shows no change needed, since it was already calibrated
-- A test that only ever confirms what you expected isn't a test, the clean null result here is what makes the other 3 trustworthy
+- The new promise is computed dynamically per tier, the rounded-up average of that tier's own real delivery time, not a guessed number
+- The "p-value" column is the odds this improvement could be a coincidence. Under 0.001 means less than a tenth of a percent chance, essentially certain it's real, for 3 of the 4 tiers
+- Standard Class correctly shows no change needed (p-value 0.951, meaning "no detectable difference"), since it was already calibrated. A test that only ever confirms what you expected isn't a test, that honest null result is what makes the other 3 trustworthy
 
 ## Same Analysis, at Real Scale
 
@@ -134,9 +138,10 @@ df.groupBy("Shipping Mode").agg(
 - Not needed at 180K rows, Pandas handles that fine. This exists to prove the logic holds at 180 million rows before scale is ever a real constraint
 - Every stage produces identical numbers in both versions
 
-## Stripping PII Before the Dashboard Sees It
+## Stripping Personal Data Before the Dashboard Sees It
 
 ```python
+# PII = "personally identifiable information," anything that identifies a real person
 PII_COLUMNS = ["Customer Email", "Customer Password", "Customer Fname",
                "Customer Lname", "Customer Street", "Customer Zipcode",
                "Order Zipcode", "Product Description", "Product Image"]
