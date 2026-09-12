@@ -138,6 +138,14 @@ df.groupBy("Shipping Mode").agg(
 - Not needed at 180K rows, Pandas handles that fine. This exists to prove the logic holds at 180 million rows before scale is ever a real constraint
 - Every stage produces identical numbers in both versions
 
+## What Else the Raw File Revealed
+
+Beyond what the automated integrity check reports, a closer look at the raw file turns up specific, real problems worth knowing about, even though they don't end up affecting the final numbers:
+
+- `Product Description` is empty for all 180,519 rows, a completely dead column
+- `Order Zipcode` is empty for about 86% of rows, a real gap, though it isn't one of the fields the cleaning step checks, and it gets stripped as personal data before the dashboard sees it anyway
+- Several city and country names use accented characters, the concrete, specific reason the whole pipeline needs that older text encoding instead of the modern default
+
 ## Stripping Personal Data Before the Dashboard Sees It
 
 ```python
@@ -158,9 +166,29 @@ keep_cols = [c for c in df.columns if c not in PII_COLUMNS]
 - Documenting this rather than quietly patching it, catching your own drift is worth more than pretending it never happened
 - Fix: regenerate the SQL from the same logic, or delete it in favor of one source of truth
 
+## What the Dashboard Actually Shows
+
+One screen, a KPI (key performance indicator, the headline numbers at the top) row plus 4 sheets, all built from the cleaned, PII-stripped data:
+
+- **KPI row**: total orders, overall breach rate, average latency gap, and the First-Class-specific breach rate on its own, since that's the tier that fails hardest
+- **SLA success by shipping mode**: the strict-versus-buffered comparison, side by side, per tier
+- **A delay map**: colored by average latency gap per country, red for later than promised
+- **Breach rate over time**: a line per shipping mode, to check whether things are improving or not
+- **Customer segment impact**: the design brief for this one, straight from my own build notes: "the three bars should look nearly identical in height," because that visual sameness *is* the systemic-not-selective finding
+
+A static screenshot is committed alongside the live dashboard link on purpose, since a recruiter skimming a GitHub page often won't click through to a live tool, the image needs to sell the finding on its own.
+
+## Decisions That Were Mine, Not a Tool's
+
+- Choosing a 1-day grace period for "buffered" success, not 2 or 3, a judgment call about what counts as a reasonable near-miss
+- Generalizing a single hardcoded, First-Class-only test into a reusable check across all 4 shipping tiers, with a real statistical test attached instead of a raw percentage comparison
+- Computing the realistic delivery estimate dynamically from each tier's own data, instead of picking a number that sounded reasonable
+- Building the PySpark version at all, when the dataset didn't strictly need it, specifically to demonstrate the logic holds at a scale one machine couldn't handle
+- Stripping personal data before anything reaches a public dashboard tool, a security decision the dataset itself didn't require
+
 ## Conclusion
 
-An interactive dashboard shipped from this: a KPI row, a regional delay map, and a chart specifically built so the 3 customer-segment bars look nearly identical in height, because that visual sameness is the finding. Two honest limits, worth stating plainly: this is historical data, not a live feed, and the A/B test is a simulation, a strong signal, not a guaranteed result from a real experiment.
+Two honest limits, worth stating plainly: this is historical data, not a live feed, and the A/B test is a simulation, a strong signal, not a guaranteed result from a real experiment. Neither limitation changes the core finding, First Class was broken by a consistent, fixable amount, and fixing it would have worked.
 
 **Live dashboard:** [Tableau Public](https://public.tableau.com/app/profile/rithika.h8756/viz/SupplyChainSLAAudit/SupplyChainSLAAudit)
 **Code:** [github.com/rithikahaha/Supply-Chain-Audit](https://github.com/rithikahaha/Supply-Chain-Audit)

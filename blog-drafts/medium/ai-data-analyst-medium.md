@@ -1,6 +1,6 @@
 # I Gave a Team of AI Agents My Job for a Week. Here's Where I Caught Them Lying.
 
-I do data analysis for a living, and I got tired of spending 40 minutes writing SQL (the language used to ask questions of a database) and building charts to answer a question someone typed in five seconds. So I built a team of AI agents on Claude Code, Anthropic's AI coding tool, that answers business questions in plain English, with real numbers, a chart, and honest caveats. This is the full walkthrough: the architecture, the actual code behind it, and two real mistakes I caught along the way. You don't need to read code to follow it, every technical term gets a quick plain-English gloss the first time it shows up.
+I do data analysis for a living, and I got tired of spending 40 minutes writing SQL (the language for asking questions of a database) and building charts to answer a question someone typed in five seconds. So I built a team of AI agents on Claude Code, Anthropic's AI coding tool, that answers business questions in plain English, with real numbers, a chart, and honest caveats. This is the full walkthrough, architecture, every agent, the actual code, real answers it's given, and two real mistakes I caught along the way. No coding background needed, every technical term gets a quick plain-English gloss the first time it shows up.
 
 ## What it actually does
 
@@ -12,21 +12,44 @@ I do data analysis for a living, and I got tired of spending 40 minutes writing 
 
 ## Why 7 agents instead of 1 prompt
 
-One AI trying to be equally good at database queries, statistics, and infrastructure ends up mediocre at all three, the same way one person can't be the best at every job on a team.
+One AI trying to be equally good at database queries, statistics, and infrastructure ends up mediocre at all three, the same way one person can't be the best at every job on a team. It was originally 11 agents, one per narrow skill. I rejected that, no real company staffs a team that granularly, and rebuilt it around 7 roles that map to actual job titles. I also cut a dedicated MLOps agent entirely (MLOps is the ongoing work of monitoring and retraining models in production), not because it didn't work, but because that's a stretch past what a Data Analyst role actually needs.
 
-- `analyst-lead`, the only one you talk to, routes everything else
-- `sql-engineer`, schema lookup and query writing, cannot call other agents
-- `data-scientist`, significance tests, A/B tests, predictive modeling
-- `data-platform-engineer`, pipelines, data quality, cloud and infra questions
-- `data-visualizer`, ad-hoc charts and the standing dashboard
-- `ai-engineer`, resolves ambiguous terms, owns agent and skill quality
-- `qa-reviewer`, sanity-checks every result, owns the test suite and CI
+Each agent is a plain markdown file: a short description, a permissions list, and instructions written in English, not a line of traditional code.
 
-It was originally 11 agents, one per narrow skill. I rejected that, no real company staffs a team that granularly, and rebuilt it around these 7 roles. I also cut a dedicated MLOps agent entirely, not because it didn't work, but because model-registry and drift-detection tooling is scope creep past what a Data Analyst role needs.
+**analyst-lead**, the only one you talk to. Its permissions list includes the ability to call the other 6 agents, which none of the specialists below can do.
+- Reads the question, decides who handles it, and writes the final answer
+- Routes every question through 6 phases: Ask, Prepare, Process, Analyze, Share, Act (detailed below)
+- Hard rule in its own instructions: never fabricate a number you didn't get from a query
 
-## How a question actually moves through it
+**sql-engineer**, descriptive questions.
+- Confirms table and column names before writing anything, never guesses
+- Every query must be read-only, if a question genuinely needs to change data, it stops and says so
+- Cannot call other agents, a query-writer that could spawn other agents is scope creep waiting to happen
 
-`analyst-lead` routes every question through 6 phases: Ask, Prepare, Process, Analyze, Share, Act.
+**data-scientist**, statistics, A/B tests, predictive modeling.
+- Uses the shared statistics code instead of writing a one-off test inline
+- Told explicitly: a "not significant" result on a small sample isn't proof of no effect, say so
+- Reports effect size and confidence, not just a pass/fail on a p-value
+
+**data-platform-engineer**, pipelines, data quality, cloud and infrastructure questions.
+- Owns the rule "land raw data first, don't clean it on the way in," so a cleaning bug never destroys the only copy of the original data
+- Can propose cloud infrastructure as code, never actually provision or change a real cloud account
+
+**data-visualizer**, charts and the standing dashboard.
+- Has a decision table mapping question shape to chart type: a trend gets a line chart, a comparison gets a bar chart, a sequential drop-off gets a funnel
+- Rule: if fewer than about 3 data points would result, present the numbers directly instead of forcing a chart
+
+**ai-engineer**, resolves ambiguous terms, owns agent and skill quality.
+- Owns the rule for when a new agent is warranted (a genuinely different role) versus when it's just a new skill (same role, different playbook)
+- Periodically re-runs a set of golden test questions to catch regressions in the whole system
+
+**qa-reviewer**, the last check before anything reaches you.
+- A per-answer checklist: row counts, null rates, duplicate joins, date range coverage, ambiguous definitions
+- Also owns the automated test suite and the CI pipeline (checks that run automatically on every code change)
+
+## The 6 phases every question moves through
+
+`analyst-lead` routes every question through: Ask, Prepare, Process, Analyze, Share, Act.
 
 - **Ask**: understand the real business problem, ground ambiguous terms against a glossary instead of guessing
 - **Prepare**: confirm the right data exists and is trustworthy before touching it
@@ -36,6 +59,17 @@ It was originally 11 agents, one per narrow skill. I rejected that, no real comp
 - **Act**: close with the plain-English "so what," not just a restated stat
 
 Prepare and Process are the ones people skip when they're excited about the AI part. They're also the ones that stop a wrong number from ever reaching you.
+
+## Reusable playbooks, not just agents
+
+Agents are roles. "Skills" are recipes a role follows for a specific, repeatable kind of analysis, so the same question shape gets answered the same correct way every time:
+
+- **schema-explorer**: always run first, list tables and columns before writing any query
+- **growth-metrics-analysis**: WAU/MAU trend and revenue retention, keeps the two from being conflated
+- **funnel-analysis**: sequential conversion, drop-off identification
+- **cohort-retention**: group by signup month, track retention by month offset
+- **anomaly-detection**: baseline plus threshold, then rule out obvious causes before calling something a real anomaly
+- **executive-summary**: the output format every answer follows, headline, so-what, evidence, method, caveats
 
 ## The warehouse guardrail
 
@@ -52,7 +86,7 @@ def run_query(sql):
 
 - That first line is a regex, a pattern-matching rule for text, that only lets a question through if it starts with a word meaning "look something up," never "change" or "delete"
 - Anything that tries to modify or remove data gets rejected in code before it ever reaches the actual database
-- This is the entire defense against an AI agent with database access and a bad prompt, and it's proven to work with an automated test that tries to break it on purpose
+- This is the entire defense against an AI agent with database access and a bad prompt, proven with an automated test that tries to break it on purpose
 
 ## Getting from raw data to a warehouse
 
@@ -127,6 +161,14 @@ def weekly_active_users():
 ```
 
 ```python
+def net_revenue_retention():
+    return run_query("""WITH reference_date AS (SELECT MAX(event_date) AS d FROM product_events)
+        SELECT ROUND(100.0 * SUM(mrr) / SUM(initial_mrr), 1) AS nrr_pct
+        FROM subscriptions, reference_date
+        WHERE julianday(reference_date.d) - julianday(start_date) >= 90""")
+```
+
+```python
 def account_risk_list(top_n=20):
     model = joblib.load(MODEL_PATH)
     df = run_query(FEATURE_QUERY)
@@ -134,10 +176,19 @@ def account_risk_list(top_n=20):
     return df.sort_values("churn_risk", ascending=False).head(top_n)
 ```
 
-- Dropping the current partial week matters, without it every WAU chart ends in a fake decline just because the week isn't over yet
+- Dropping the current partial week matters, without it every weekly-active-user chart ends in a fake decline just because the week isn't over yet
+- Net revenue retention only counts accounts at least 90 days old, so brand-new accounts (that haven't had time to expand or churn) don't water down the number
 - The risk list is where the model actually gets used live, scoring every active account and ranking them, so "who should I call" is a list of names, not a percentage
 
 ## How it knows something is statistically real
+
+Two different tools, for two different questions.
+
+```python
+stat, p_value = stats.ttest_ind(group_a, group_b, equal_var=False)
+```
+
+- A significance test for comparing the averages of two groups, "are these two numbers actually different, or could that gap be random noise"
 
 ```python
 p_pool = (x1 + x2) / (n1 + n2)
@@ -146,8 +197,8 @@ z = (p2 - p1) / se
 p_value = 2 * (1 - stats.norm.cdf(abs(z)))
 ```
 
-- This is a significance test (specifically a two-proportion z-test) for comparing two percentages, like two churn rates, and checking whether the gap between them is a real pattern or could just be random luck
-- It also checks whether there was even enough data to trust the answer either way, separate from whether the result looked significant
+- A different test for comparing two percentages instead of two averages, "is this rate actually higher, or could that gap be luck"
+- Also computes whether the sample was even large enough to detect a real effect, separate from whether the result looked significant
 - This exact calculation is what caught the churn "finding" below
 
 ## The churn model
@@ -167,6 +218,25 @@ auc = roc_auc_score(y_test, pipeline.predict_proba(X_test)[:, 1])
 - Graded on AUC (a score from 0.5 to 1 measuring how well the model ranks risky accounts above safe ones, 0.5 is a coin flip, 1 is perfect), not plain accuracy, because most accounts don't churn, and accuracy would happily reward a model that just guesses "safe" every time
 - 0.6675 is good enough to prioritize which accounts to check on first, not good enough to be treated as certain, and nothing in the output claims otherwise
 
+## Three real questions and answers
+
+**"Is product engagement growing or shrinking?"**
+Weekly active users grew from 234 to 411 over 26 weeks. Up 75.6%. The most recent week was excluded to avoid a false drop-off.
+
+**"Where are we losing users before they actually try the product?"**
+Of 3,206 signups, only 1,421 (44%) ever activated. The biggest single leak is between onboarding and activation, not during onboarding itself, a specific, actionable finding instead of a vague "our funnel leaks somewhere."
+
+**"Are we healthy overall, and which accounts need attention?"**
+Net revenue retention is 108.5%, healthy. Starter-plan accounts churn at 28.8% versus 6.7% for Enterprise. The churn model then names the specific at-risk accounts, not just the segment average, and separately, a comparison that looked like a 35% churn improvement from a certain integration came back not statistically significant (more on that below), reported honestly as "promising, not proven."
+
+## How the agents get checked for regressions
+
+A fixed set of 7 "golden" business questions, each with an expected answer shape, that `ai-engineer` periodically re-runs by hand and compares against.
+
+- Example: "How many active users do we have?" is expected to trigger the glossary lookup rather than guess a definition, and state which definition and time window were used
+- Example: "Why did weekly active users drop 90% this week?" is expected to be caught as the partial current week, not presented as a real drop
+- This isn't an automated pass/fail suite, it's a checklist for catching the system quietly regressing as it grows
+
 ## Bug #1: the chart that lied
 
 The funnel chart (signup, onboarding, activation) rendered alphabetically instead: activation, funnel, signup.
@@ -183,16 +253,12 @@ chart = alt.Chart(chart_df).mark_bar().encode(
 
 ## Bug #2: the finding that wasn't one
 
-Integration-adopting accounts churned at 17.5% versus 27.1% for non-adopters, a 35% relative gap. Run through the z-test above:
-
-```
-p_value = 0.075
-```
+Integration-adopting accounts churned at 17.5% versus 27.1% for non-adopters, a 35% relative gap. Run through the z-test above, `p_value = 0.075`.
 
 - A p-value is the odds a gap this size could just be luck. 0.075 means a 7.5% chance, just above the usual 5% bar for calling something real, and the non-adopter group was only 59 accounts, small enough that the test flagged the sample as too small to be sure either way
 - Reported as "promising, not proven," not "found it." The exciting number would have sent someone chasing a pattern that might not be real
 
-## Automated tests, run on every change
+## Automated tests, CI, and a deployment plan that stayed a plan
 
 ```yaml
 - name: Build the sample warehouse via the real pipeline
@@ -202,8 +268,14 @@ p_value = 0.075
 - run: pytest -v
 ```
 
-- 24 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration), no one has to remember to run them by hand
+- 24 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration)
 - It rebuilds the entire sample database through the real pipeline before testing against it, so a broken pipeline gets caught, not just a broken individual query
+- Deployment plans exist for AWS, GCP, and Azure (Terraform, a way of writing infrastructure as code), explicitly illustrative and never applied to a real cloud account
+- Every agent talks to the warehouse through one connection string, so pointing this at a real Postgres or Snowflake warehouse instead of the local sample is a config change, not a rewrite
+
+## Is any of this data real?
+
+No, and I say that upfront. Every organization, user, and event in this dataset is synthetically generated with fixed random seeds, for reproducibility. The 75.6% WAU growth, the 108.5% net revenue retention, none of these are a real company's numbers. What this demonstrates isn't "I found a real insight," it's "I can build the system that would find one," the agents, the pipeline, the tests, the model, all real and running end to end, which is the more relevant claim for the roles I'm applying to.
 
 ## What was mine, not the AI's
 

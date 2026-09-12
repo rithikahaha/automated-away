@@ -22,6 +22,10 @@ df = (orders
 - A "join" combines two tables using a shared ID column, like a very literal version of Excel's VLOOKUP. An "inner" join only keeps rows that match on both sides, used here for payments and customers, an order with no matching payment can't have revenue computed anyway
 - A "left" join keeps every row from the first table even without a match, used for reviews, since a missing review shouldn't drop an otherwise valid order
 
+## Revenue, geography, and payments
+
+Three straightforward aggregations, and the real numbers matter: total revenue across all 99,440 orders is R$16,081,420.74 (about R$161.72 average per order). Grouping by state instead of by month shows São Paulo alone driving 37.5% of total revenue, more than the next several states combined. Grouping by payment type instead shows 73.9% of transactions on credit card, making that single payment gateway the highest-leverage piece of infrastructure to keep reliable. All three use the same pattern: split the data into buckets (`groupby`), then summarize each bucket, the same idea as an Excel PivotTable, just written in code.
+
 ## Customer value, the simple way
 
 ```python
@@ -98,6 +102,15 @@ reg = RandomForestRegressor(n_estimators=200, max_depth=10)
 - The more useful output was a side effect: whether an order arrived late is, by far, the strongest single signal for a bad review, stronger than price or shipping cost
 - Fixing delivery reliability likely moves customer satisfaction more than anything else measurable in this dataset
 
+## The interactive dashboard
+
+```python
+fig.write_html(html_path, include_plotlyjs=True, full_html=True)
+```
+
+- `include_plotlyjs=True` embeds the entire charting library directly inside the one HTML file, instead of loading it from an external website
+- That single setting is deliberate: a version pointing at an external website would render as a blank page for anyone opening the file with no internet connection, since the charts never load. Embedding it makes the file work fully offline, double-click and go
+
 ## Automated checks, without needing the real dataset
 
 ```python
@@ -109,11 +122,20 @@ required = ["load_data", "build_analytical_dataset", "rfm_analysis", "cohort_ret
 - This reads the code's own structure as plain text, without actually running it, like proofreading a recipe instead of cooking it, checking that key functions haven't been silently renamed or deleted
 - Runs against a small made-up dataset built directly into the check itself, so the pipeline gets validated automatically with no real credentials and no 50MB download needed
 
-## Other real numbers
+## Decisions That Were Mine, Not a Model's
 
-- São Paulo alone drives 37.5% of total revenue
-- 73.9% of transactions use credit card
-- Every segmentation threshold recomputes fresh on each run, they're statistical patterns, not fixed business rules
+- Reporting two different "Champion" multipliers (2.1x and 7x) instead of one, and naming which method produced each, rather than quietly using whichever number was more impressive
+- Choosing `class_weight='balanced'` for the delivery model, a direct response to recognizing the naive 92%-accuracy version would be technically correct and operationally useless
+- Rescaling the RFM features before clustering, after recognizing raw spend would otherwise silently dominate the grouping
+- Embedding the charting library directly in the dashboard file, after recognizing the lighter, web-linked version would render blank offline
+- Writing an automated check that reads the code's structure instead of requiring the real 50MB dataset, so a regression gets caught without needing real data or cloud credentials in the pipeline
+
+## Limitations, stated plainly
+
+- Every segmentation threshold recomputes fresh on each run, they're statistical patterns in the current data, not fixed business rules, and they'll shift if the underlying data changes
+- The satisfaction-versus-loyalty correlation only covers the small minority of customers with 2 or more orders, so it says relatively little about the broader, mostly one-time customer base
+- The delivery model's precision is low (about 19%), it over-flags orders as late in exchange for catching more real ones, a real operational tradeoff, not a modeling failure
+- Both models train only on delivered orders, so they say nothing about predicting cancellations
 
 ## Conclusion
 
