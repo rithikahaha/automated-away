@@ -2,6 +2,8 @@
 
 Checkout pages promise a delivery date. Almost nobody checks, at scale, whether fulfillment operations actually back that promise up. I ran a five-stage audit across 180,519 real supply chain orders to find out: is this data trustworthy, are we hitting our promises, where's the time going, is the damage concentrated on anyone in particular, and would fixing the promise actually work.
 
+The dataset is DataCo's public supply chain data, four shipping tiers (Same Day, First Class, Second Class, Standard Class), each with its own promised delivery window. Every stage below is implemented three ways, SQL, a Pandas/SQLite notebook, and a PySpark rewrite, and all three agree on the numbers. Here's what they found, and one honest inconsistency I caught in my own analysis while writing this up.
+
 ## The promise test
 
 ```sql
@@ -40,15 +42,19 @@ A two-proportion z-test across all four shipping modes, comparing the current pr
 | Second Class | 2 days | 4 days | 20.4% | 59.9% | <0.001 |
 | Standard Class | 4 days | 4 days | 60.2% | 60.2% | 0.951 |
 
-Three tiers recover to near-certain success. Standard Class correctly shows no significant change, because it didn't need one. A test that only ever confirms what you expected isn't a test.
+Three tiers recover to near-certain success. Standard Class correctly shows no significant change, because it didn't need one. A test that only ever confirms what you expected isn't a test, and getting a clean null result on the tier that was already fine is what made me trust the other three.
 
 ## Same analysis, twice
 
-Every stage also exists as a PySpark rewrite. Not because 180K rows needed it, Pandas handled that fine, but to prove the logic holds at 180 million rows before ever needing to run it there. Same groupby-and-average pattern, just written to run across a cluster instead of one machine, and it produces identical numbers to the SQL version stage for stage.
+Every stage also exists as a PySpark rewrite. Not because 180K rows needed it, Pandas handled that fine, but to prove the logic holds at 180 million rows before ever needing to run it there. Same groupby-and-average pattern, just written to run across a cluster instead of one machine, and it produces identical numbers to the SQL version stage for stage. Proving that agreement was the actual point, correctness independent of scale, before scale is ever a real constraint.
 
 ## The inconsistency I found in my own work
 
-Worth admitting rather than quietly fixing: the project has two versions of the A/B test, an early hardcoded SQL query assuming First Class should be re-promised at "4 days," and the generalized Python function above, which computes the number dynamically and gets 2 days instead. Both agree on the conclusion. They disagree on the specific number, because the SQL version predates the generalization and never got updated. Two implementations of the same test drifting apart is exactly the kind of thing a single source of truth is supposed to prevent, and I hadn't enforced one here.
+Worth admitting rather than quietly fixing: the project has two versions of the A/B test, an early hardcoded SQL query assuming First Class should be re-promised at "4 days," and the generalized Python function above, which computes the number dynamically and gets 2 days instead. Both agree on the conclusion. They disagree on the specific number, because the SQL version predates the generalization and never got updated. Two implementations of the same test drifting apart is exactly the kind of thing a single source of truth is supposed to prevent, and I hadn't enforced one here. I'm leaving it visible rather than cleaning it up quietly, because catching your own drift is a more useful skill to demonstrate than pretending it never happened.
+
+## What actually shipped
+
+An interactive Tableau dashboard with a KPI row, a regional missed-deadline map, and a chart specifically designed so the customer-segment bars look nearly identical in height, because that's the finding: systemic, not selective. Two limitations worth stating plainly, this is a historical dataset, not live streaming data, and the A/B test is a rule-based simulation, a theoretical upper bound on recovery, not a guarantee from a real experiment.
 
 **Live dashboard:** [Tableau Public](https://public.tableau.com/app/profile/rithika.h8756/viz/SupplyChainSLAAudit/SupplyChainSLAAudit)
 **Code:** [github.com/rithikahaha/Supply-Chain-Audit](https://github.com/rithikahaha/Supply-Chain-Audit)

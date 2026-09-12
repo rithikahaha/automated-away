@@ -2,9 +2,11 @@
 
 I expected the standard retention story going in: customers drift away gradually, month over month, the way a subscription business typically churns. A cohort analysis on 99,440 real Olist orders showed something different, and the difference changes what "fix retention" should even mean.
 
+Olist is a Brazilian e-commerce marketplace, many independent sellers, one platform, and the dataset spans about 96,000 customers and R$16 million in revenue. I built the pipeline serverless on AWS, then ran 7 statistical analyses and 3 machine learning models on top. This post covers the finding that reframed the whole project, two segmentation methods that quietly disagreed with each other, and two model tradeoffs I made on purpose.
+
 ## The architecture
 
-Raw data lands in S3, a Glue crawler catalogs the schema automatically, Athena runs SQL directly against the files with no server to maintain. Locally, the same pipeline runs through `ecommerce_analysis.py` (7 statistical analyses), `ml_models.py` (3 ML models), and a self-contained Plotly dashboard deployed on GitHub Pages.
+Raw data lands in S3, a Glue crawler catalogs the schema automatically, Athena runs SQL directly against the files with no server to maintain. Locally, the same pipeline runs through `ecommerce_analysis.py` (7 statistical analyses), `ml_models.py` (3 ML models), and a self-contained Plotly dashboard deployed on GitHub Pages. CI runs on every push and parses the pipeline script's own structure to confirm nothing critical got silently renamed or deleted.
 
 ## The cliff, not the decline
 
@@ -14,7 +16,7 @@ df_cohort['period'] = (df_cohort['order_month'].astype(int)
 retention_rates = cohort_pivot.div(cohort_sizes, axis=0) * 100
 ```
 
-Nearly every cohort reads close to 0% by month 1. Not a slow leak, a cliff. Only 3.12% of all customers ever place a second order, period. That single number reframes the entire strategy: this isn't a subscription business fighting gradual churn, it's a multi-seller marketplace where almost nobody becomes a repeat buyer in the first place. The highest-leverage move isn't slowing decay, it's converting first-time buyers into second-time buyers at all.
+Nearly every cohort reads close to 0% by month 1. Not a slow leak, a cliff. Only 3.12% of all customers ever place a second order, period. That single number reframes the entire strategy: this isn't a subscription business fighting gradual churn, it's a multi-seller marketplace where almost nobody becomes a repeat buyer in the first place, likely because there's no single brand relationship pulling anyone back. The highest-leverage move isn't slowing decay, it's converting first-time buyers into second-time buyers at all.
 
 ## Two segmentations, two honest answers
 
@@ -27,7 +29,7 @@ rfm['cluster'] = kmeans.fit_predict(rfm_scaled)
 # silhouette score: 0.497
 ```
 
-Both numbers are real. They're just answering different questions, top 20% versus genuine outliers, and reporting both with the method attached beats quietly picking whichever sounds better in a pitch.
+Both numbers are real. They're just answering different questions, top 20% versus genuine outliers, and reporting both with the method attached beats quietly picking whichever sounds better in a pitch. "Champions spend 4x the average" was an earlier, informal estimate that circulated before either number was actually verified, and neither verified number matched it.
 
 ## Two models, two honest tradeoffs
 
@@ -45,8 +47,9 @@ A second Random Forest predicts review score directly, R² of 0.216, modest, rep
 - São Paulo alone drives 37.5% of total revenue.
 - Satisfaction and repeat purchasing barely correlate at all (r ≈ 0.038), a happy customer isn't reliably a returning one.
 - Every segmentation threshold, every cluster boundary, gets recomputed fresh on each run. They're statistical bins, not fixed business rules, and they'll shift if the underlying data does.
+- The delivery model over-flags orders as late (precision around 19%) to catch more real ones (recall 53.7%). Whether that trade is worth it depends on the real cost of a false alarm versus a missed delivery, which is a business call, not a modeling one.
 
-None of this needed a bigger model. It needed the model graded on the metric that actually matches the real-world cost of being wrong, and two segmentation methods reported side by side instead of collapsed into one flattering headline.
+None of this needed a bigger model. It needed the model graded on the metric that actually matches the real-world cost of being wrong, and two segmentation methods reported side by side instead of collapsed into one flattering headline. If you're working with the same dataset or want to compare notes on the RFM-versus-clustering question, the code's below.
 
 **Live dashboard:** [rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline](https://rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline/dashboard/)
 **Code:** [github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline](https://github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline)
