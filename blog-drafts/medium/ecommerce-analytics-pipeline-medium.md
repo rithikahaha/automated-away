@@ -1,12 +1,16 @@
 # Only 3.12% of Customers Ever Buy Again: What a Cohort Analysis Actually Found
 
-**The short version:** I built an analytics pipeline on top of 99,440 real e-commerce orders expecting to find the usual story, customers slowly drifting away over time. Instead I found a cliff: almost nobody ever buys a second time at all. That one number changes what "fix retention" should even mean for this kind of business. This post also covers two places where I had two honest, competing answers instead of one clean one, and reported both instead of picking whichever sounded better.
+I expected the usual retention story on this one, customers drifting away gradually. A cohort analysis on 99,440 real Olist orders (a Brazilian e-commerce marketplace) showed a cliff instead. This post covers that finding, 2 segmentation methods that disagreed with each other, and 2 model tradeoffs I made on purpose.
 
-The data is from Olist, a Brazilian e-commerce marketplace where many independent sellers share one platform, not a single-brand retailer. About 96,000 customers, roughly R$16 million (about $3.2 million USD) in total revenue. I built the pipeline to run on Amazon's cloud infrastructure (serverless, meaning no server sits around running 24/7 waiting for a question, you only pay for what you actually use), then ran seven statistical analyses and three machine learning models on top of it.
+## 📋 What this project does
 
-## Why the retention finding matters more than it sounds
+- Serverless pipeline on AWS: S3 for storage, Glue to auto-catalog the schema, Athena to run SQL directly against the files
+- 7 statistical analyses: revenue trends, customer segmentation, payments, geography, satisfaction, cohort retention, RFM scoring
+- 3 ML models: delivery-delay prediction, review-score prediction, K-Means customer clustering
+- A live interactive dashboard, deployed on GitHub Pages
+- CI that validates the pipeline's structure on every push
 
-Going in, I expected a gradual decline: customers buy less often over time, the same pattern you'd see with a subscription service slowly losing people. To check that, I built a cohort analysis, tracking every customer by the month of their very first purchase, then following how many of them were still buying in each month after that.
+## The retention cliff
 
 ```python
 df_cohort['period'] = (df_cohort['order_month'].astype(int)
@@ -14,46 +18,62 @@ df_cohort['period'] = (df_cohort['order_month'].astype(int)
 retention_rates = cohort_pivot.div(cohort_sizes, axis=0) * 100
 ```
 
-The result wasn't a gradual decline. It was a cliff. Nearly every group of customers dropped to close to 0% by the very next month. Only 3.12% of all customers, ever, place a second order. That single number completely reframes the strategy. This isn't a business slowly losing loyal customers, it's a business where almost nobody becomes a repeat customer in the first place, probably because buying from a marketplace of many different sellers doesn't build the same kind of loyalty as buying from one brand you know. The highest-leverage fix isn't "reduce the decline." It's "get anyone at all to buy a second time."
+**Explanation:**
+- Groups customers by the month of their first purchase, then tracks what fraction of each group is still buying in later months
+- Result: nearly every cohort drops to close to 0% by month 1. Not a decline, a cliff
+- Only 3.12% of all customers ever place a second order, period
+- That reframes the entire strategy: this isn't a business fighting gradual churn, it's a marketplace where almost nobody becomes a repeat buyer at all, likely because there's no single-brand relationship pulling anyone back
+- The highest-leverage fix is converting first-time buyers into second-time buyers at all, not slowing a decay that barely exists to slow
 
-## Two ways to rank your best customers, two different answers
-
-I used two separate methods to find the most valuable customers, and they disagreed with each other in an interesting way.
-
-The first method, a common scoring technique (RFM, meaning how Recently, how Frequently, and how Much someone bought), ranks the top 20% of customers as "Champions." That group spends about **2.1 times** the average customer.
-
-The second method, a clustering algorithm (K-Means, software that finds natural groupings in data on its own, without being told the categories in advance) found a much smaller, much more extreme group of standout spenders, and that group spends nearly **7 times** the average.
+## Two segmentations, two honest answers
 
 ```python
 rfm_scaled = StandardScaler().fit_transform(rfm[['recency','frequency','monetary']])
 kmeans = KMeans(n_clusters=4, random_state=42, n_init=10)
 rfm['cluster'] = kmeans.fit_predict(rfm_scaled)
+# silhouette score: 0.497
 ```
 
-Both numbers are completely real. They're just answering slightly different questions, "top fifth of customers" versus "genuine statistical outliers." I reported both, with the method attached to each, instead of picking whichever one sounded more impressive for a headline. An earlier, informal estimate had circulated claiming a flat "4x," and neither properly verified number actually matched that, which is exactly the kind of thing that happens when a number gets repeated before anyone checks it.
+**Explanation:**
+- Quintile RFM scoring (Recency, Frequency, Monetary, split into 5 equal groups each) puts the top 20% of customers into "Champion," averaging 2.1x the overall spend
+- K-Means (an algorithm that finds natural groupings on its own, no labels given) finds a much smaller, stricter cluster of genuine outliers, averaging nearly 7x
+- Both numbers are real. They're answering different questions, "top fifth" versus "genuine extremes"
+- Reported both, with the method attached to each, instead of quietly picking whichever sounds better. An earlier informal "4x" estimate had circulated before either number was actually verified, and neither matched it
 
-## Two models, two deliberate tradeoffs
-
-Only about 8% of orders in this dataset actually arrive late. That matters a lot for building a model to predict which ones will be late: a lazy model could just guess "on time" every single time and be right 92% of the time, while being completely useless, since it would never once catch a real problem. I trained the model to specifically pay more attention to those rare late orders instead:
+## Model 1: predicting late deliveries
 
 ```python
 clf = RandomForestClassifier(n_estimators=200, max_depth=10,
                               class_weight='balanced')
 ```
 
-That one setting, `class_weight='balanced'`, trades away some of that flattering 92% number (the real accuracy drops to 78.2%) in exchange for actually catching over half of the genuinely late orders before they happen. A worse-looking number that's actually useful beats a better-looking number that isn't.
+**Explanation:**
+- Only about 8% of orders are actually late, so a naive model hits 92% accuracy by always predicting "on time," and catches zero real risk
+- `class_weight='balanced'` forces the model to pay real attention to the rare late-order examples during training
+- Result: accuracy drops to 78.2% (lower than the naive baseline, on purpose), but ROC-AUC is 0.737 and recall on the late class is 53.7%, meaning it now genuinely catches over half of real late deliveries before they happen
 
-A second model tried to predict a customer's review score (1 to 5 stars) directly from order details. It explained about 22% of what drives a review score, a modest result, reported honestly as modest. But building it surfaced something more useful than the prediction itself: whether an order arrived late is, by a wide margin, the single strongest signal for a bad review, stronger than price or shipping cost. Fixing delivery reliability likely does more for customer satisfaction than anything else measurable in this data.
+## Model 2: predicting review scores
 
-## The other numbers worth knowing
+```python
+reg = RandomForestRegressor(n_estimators=200, max_depth=10)
+# r2 = 0.216, rmse = 1.14 stars
+```
 
-- One city, São Paulo, drives 37.5% of all revenue on its own.
-- Whether a customer left a good review and whether they ever came back are almost completely unrelated (a correlation of about 0.04, essentially none). A happy customer is not reliably a returning one.
-- Every customer segment and cluster boundary gets recalculated fresh each time the analysis runs. They're statistical patterns in the current data, not fixed business rules carved in stone, and they'll shift if the underlying data does.
+**Explanation:**
+- R² of 0.216 means the model explains about a fifth of what drives a review score, modest, reported as modest
+- The more useful output wasn't the prediction itself, it was the feature ranking: `is_late` is the single strongest predictor of review score, ahead of price or freight cost by a wide margin
+- Fixing delivery reliability likely moves satisfaction more than anything else in this dataset
 
-## Why none of this needed a fancier model
+## Other real numbers
 
-The lesson underneath all of this wasn't "build a bigger model." It was: grade the model on the number that actually reflects the real-world cost of being wrong, and when two honest methods disagree, report both instead of quietly picking the one that sounds better. A retention strategy built on the wrong assumption, "customers decline slowly" instead of "customers barely ever return at all," would have aimed every fix at the wrong problem entirely.
+- São Paulo alone drives 37.5% of total revenue
+- Satisfaction and repeat purchasing barely correlate (r ≈ 0.038), a happy customer isn't reliably a returning one
+- 73.9% of transactions use credit card
+- Every segmentation threshold recomputes fresh on each run, they're statistical patterns, not fixed business rules
+
+## ✨ Conclusion
+
+None of this needed a fancier model. It needed the model graded on the metric that matches the real cost of being wrong, and 2 honest segmentation methods reported side by side instead of collapsed into one flattering headline. A retention strategy built on "customers decline slowly" instead of "customers barely ever return" would have aimed every fix at the wrong problem.
 
 **Live dashboard:** [rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline](https://rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline/dashboard/)
 **Code:** [github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline](https://github.com/rithikahaha/Scalable-E-commerce-Analytics-Pipeline)

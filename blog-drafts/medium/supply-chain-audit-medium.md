@@ -1,16 +1,31 @@
 # I Audited 180,519 Orders and Found a Promise That Was Broken 100% of the Time
 
-**The short version:** every checkout page promises a delivery date. Almost nobody actually checks, at scale, whether operations can keep that promise. I audited 180,519 real orders and found one shipping tier that missed its promised date every single time, for every single customer, no exceptions. Here's how I found it, proved a fix would work, and one honest mistake I caught in my own analysis along the way.
+Checkout pages promise a delivery date. Almost nobody checks, at scale, whether operations can actually keep it. I ran a 5-stage audit across 180,519 real orders across 4 shipping tiers to find out. Here's what each stage found, and one honest inconsistency I caught in my own analysis.
 
-The dataset is a public supply chain dataset with four shipping tiers, Same Day, First Class, Second Class, and Standard Class, each with its own promised delivery window. I ran the same five-question audit against all of it: is this data even trustworthy, are we hitting our promises, where exactly is the time being lost, is the damage hitting some customers harder than others, and if I fixed the promise, would that fix actually work. I did the analysis three separate ways (two Python-based methods and one built to run across multiple machines at once for scale) specifically so I could check they all agreed before trusting any of it.
+## 📋 The 5 stages
 
-## Step 1: is the data even trustworthy
+- **Stage 1, Data Integrity**: is this dataset even trustworthy
+- **Stage 2, The Promise Test**: how often do we actually hit the promised date
+- **Stage 3, Latency Gap**: which tier is leaking the most time
+- **Stage 4, Customer Segmentation**: is the damage hitting everyone, or just some
+- **Stage 5, A/B Test Simulation**: would fixing the promise actually work
 
-Before trusting a single number, I checked the basics: how many orders, how many of those are actual duplicates, how many have obviously broken values (negative prices, absurd delivery times). Out of 180,519 rows, zero pricing errors and zero extreme outliers. Clean enough to build on.
+Every stage is implemented 3 ways, standalone SQL, a Pandas notebook, and a PySpark rewrite, and all 3 agree on the numbers.
 
-## Step 2: are we actually hitting our promises
+## Stage 1: Data Integrity
 
-This is the core question, phrased as a simple database check: for each shipping tier, what percentage of orders arrived on or before the date we promised the customer?
+```sql
+SELECT COUNT(*) AS total_rows,
+       COUNT(DISTINCT "Order Id") AS unique_orders,
+       SUM(CASE WHEN "Order Item Total" <= 0 THEN 1 ELSE 0 END) AS price_errors
+FROM supply_chain
+```
+
+**Explanation:**
+- 180,519 rows, 65,752 unique orders, 0 pricing errors, 0 extreme-delay outliers
+- Clean enough to trust every downstream number
+
+## Stage 2: The Promise Test
 
 ```sql
 SELECT "Shipping Mode",
@@ -20,11 +35,13 @@ FROM supply_chain
 GROUP BY 1
 ```
 
-First Class scored **0%.** Not low. Zero. Every single First Class order missed its exact promised date, typically arriving in about 2 days against a 1-day promise. But when I allowed just a single extra day of grace, success jumped straight to 100%. That combination is the real story: this isn't random bad luck spread around unevenly, it's a promise that was simply wrong by a consistent amount from day one. Standard Class, on the other end, was already almost perfectly calibrated.
+**Explanation:**
+- First Class: **0% strict success**. Not low, zero. Every single order missed its 1-day promise, arriving in about 2 days
+- With a 1-day grace period, that same tier jumps to 100% success
+- That combination means the promise wasn't randomly broken, it was wrong by a consistent amount from day one
+- Standard Class was the only tier already correctly calibrated
 
-## Step 3: is this hurting everyone, or just some customers
-
-Before recommending any fix, I needed to know something important: is this failure concentrated on high-value customers (which would need urgent, targeted attention) or spread evenly across everyone (an operations problem, not a customer-relationship one)?
+## Stage 4: Systemic, Not Selective
 
 ```sql
 SELECT
@@ -36,33 +53,53 @@ FROM UserValue
 GROUP BY 1
 ```
 
-All three customer spending tiers failed within 1.3 percentage points of each other, between 54.55% and 55.88%. That ruled out "our best customers are being singled out for bad service" and pointed the fix squarely at operations: fix the promise for everyone, not just the VIPs.
+**Explanation:**
+- All 3 customer spend tiers failed within 1.3 percentage points of each other (54.55% to 55.88%)
+- That rules out "our best customers are being mistreated" and points the fix at operations, not account management
 
-## Step 4: proving a fix would actually work
+## Stage 5: Proving the Fix Works
 
-It's one thing to notice a promise is broken. It's another to prove that fixing it would actually help, instead of just assuming it would. I tested it properly (a two-proportion significance test, a formal check for whether an improvement is real or could be a coincidence) across all four shipping tiers, comparing the old promise against a realistic new one calculated from each tier's own actual delivery speed:
+A two-proportion z-test across all 4 shipping tiers, comparing the current promise against a realistic one computed from each tier's own actual delivery time:
 
-| Shipping Mode | Old promise | New promise | Old success | New success | Confidence it's real |
+| Shipping Mode | Old promise | New promise | Old success | New success | p-value |
 |---|---|---|---|---|---|
-| First Class | 1 day | 2 days | 0.0% | 100.0% | over 99.9% |
-| Second Class | 2 days | 4 days | 20.4% | 59.9% | over 99.9% |
-| Standard Class | 4 days | 4 days | 60.2% | 60.2% | no change needed |
+| First Class | 1 day | 2 days | 0.0% | 100.0% | <0.001 |
+| Second Class | 2 days | 4 days | 20.4% | 59.9% | <0.001 |
+| Standard Class | 4 days | 4 days | 60.2% | 60.2% | 0.951 |
 
-Three tiers recover to near-perfect success, and the test says that improvement is essentially certain to be real, not a coincidence. Standard Class correctly shows no change is needed, because it was already fine. A test that only ever tells you what you wanted to hear isn't actually a test, and getting an honest "no difference" on the one tier that didn't need fixing is exactly what made me trust the result on the other three.
+**Explanation:**
+- 3 tiers recover to near-certain success, statistically significant at p < 0.001
+- Standard Class correctly shows no change needed, since it was already calibrated
+- A test that only ever confirms what you expected isn't a test, the clean null result here is what makes the other 3 trustworthy
 
-## Doing it all again, at a much bigger scale
+## The scale check: PySpark
 
-I also rebuilt the entire analysis using a tool built for splitting work across many computers at once (PySpark), not because 180,519 rows needed it, a single laptop handles that fine, but to prove the exact same logic would still hold if this were 180 million rows instead. Every number came out identical between the two versions. That agreement was the actual point: proving the analysis is correct on its own terms, before scale ever becomes a real problem to solve.
+Every stage also runs as a PySpark rewrite, code built to split work across many machines at once.
 
-## The mistake I caught in my own analysis
+```python
+df.groupBy("Shipping Mode").agg(
+    round(avg(when(col("Days for shipping (real)") <=
+        col("Days for shipment (scheduled)"), 1.0).otherwise(0.0)) * 100, 2)
+    .alias("strict_success_rate_pct")
+).show()
+```
 
-Here's something worth being honest about instead of quietly fixing and never mentioning: I found two different versions of the fix-the-promise test buried in the project. An early one I wrote by hand assumed First Class should be re-promised at "4 days." A later, more careful version calculates that number automatically instead of assuming it, and it actually lands on 2 days, not 4. Both versions agree on the big picture (First Class needed fixing, and fixing it works), but they disagree on the specific number, because I never went back and updated the first version after building the better one.
+**Explanation:**
+- Same exact logic as the SQL version, just written to run across a cluster instead of one machine
+- Not needed at 180K rows, Pandas handles that fine, this exists to prove the logic holds at 180 million rows before scale is ever a real constraint
+- Every stage produces identical numbers in both versions
 
-Two versions of the same test quietly drifting apart is exactly the kind of thing that should never happen, and I'm choosing to point it out rather than clean it up and pretend it was always consistent. Catching your own drift, in my opinion, is a more useful skill to show than never having any.
+## The inconsistency I found in my own work
 
-## What this actually delivered
+**Explanation:**
+- The project has 2 versions of the Stage 5 test: an early hardcoded SQL query assuming First Class needed a "4-day" fix, and the generalized Python version above, which computes 2 days dynamically instead
+- Both agree on the conclusion. They disagree on the specific number, because the SQL version predates the generalization and was never updated
+- I'm documenting this rather than quietly patching it, catching your own drift is worth more than pretending it never happened
+- Fix: regenerate the SQL from the same logic, or delete it in favor of one source of truth
 
-An interactive dashboard with a summary of key numbers up top, a map showing where delays are worst geographically, and a chart deliberately designed so the three customer-segment bars look nearly identical in height, because that visual sameness *is* the finding: this problem is systemic, not selective. Two honest limitations worth naming: this is a snapshot of historical data, not a live feed, and the fix I tested is a simulation based on real numbers, a strong signal, not a guarantee from an actual live experiment.
+## ✨ Conclusion
+
+An interactive dashboard shipped from this, KPI row, a regional delay map, and a chart specifically built so the 3 customer-segment bars look nearly identical in height, because that visual sameness is the finding. Two honest limits: this is historical data, not a live feed, and the A/B test is a simulation, a strong signal, not a guaranteed result from a real experiment.
 
 **Live dashboard:** [Tableau Public](https://public.tableau.com/app/profile/rithika.h8756/viz/SupplyChainSLAAudit/SupplyChainSLAAudit)
 **Code:** [github.com/rithikahaha/Supply-Chain-Audit](https://github.com/rithikahaha/Supply-Chain-Audit)
