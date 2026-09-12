@@ -113,7 +113,7 @@ export default function Experience() {
         variants={{ show: { transition: { staggerChildren: 0.08 } } }}
       >
         {experience.map((job, i) => (
-          <ExperienceRow key={job.company} job={job} index={i} />
+          <ExperienceRow key={job.client || job.company} job={job} index={i} />
         ))}
       </motion.div>
 

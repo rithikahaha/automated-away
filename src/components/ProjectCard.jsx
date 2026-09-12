@@ -1,8 +1,9 @@
-import { useRef } from 'react'
-import { motion, useMotionTemplate, useMotionValue, useSpring } from 'framer-motion'
-import { FiArrowUpRight, FiGithub } from 'react-icons/fi'
+import { useRef, useState } from 'react'
+import { AnimatePresence, motion, useMotionTemplate, useMotionValue, useSpring } from 'framer-motion'
+import { FiArrowUpRight, FiChevronDown, FiEdit3, FiGithub } from 'react-icons/fi'
 
 export default function ProjectCard({ project, index }) {
+  const [showDiagram, setShowDiagram] = useState(false)
   const ref = useRef(null)
   const rotateX = useSpring(0, { stiffness: 300, damping: 25 })
   const rotateY = useSpring(0, { stiffness: 300, damping: 25 })
@@ -67,7 +68,7 @@ export default function ProjectCard({ project, index }) {
           ))}
         </div>
 
-        <div className="mt-6 flex items-center gap-5 font-mono text-sm">
+        <div className="mt-6 flex flex-wrap items-center gap-5 font-mono text-sm">
           <a
             href={project.github}
             target="_blank"
@@ -86,7 +87,46 @@ export default function ProjectCard({ project, index }) {
               <FiArrowUpRight size={15} /> {project.demoLabel || 'Live'}
             </a>
           )}
+          {project.blog && (
+            <a
+              href={project.blog}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 text-muted transition-colors hover:text-accent"
+            >
+              <FiEdit3 size={15} /> Blog
+            </a>
+          )}
+          {project.diagram && (
+            <button
+              onClick={() => setShowDiagram((v) => !v)}
+              className="flex items-center gap-1.5 text-muted transition-colors hover:text-accent"
+            >
+              How it works
+              <motion.span animate={{ rotate: showDiagram ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                <FiChevronDown size={14} />
+              </motion.span>
+            </button>
+          )}
         </div>
+
+        {project.diagram && (
+          <AnimatePresence initial={false}>
+            {showDiagram && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+                <div className="mt-5 rounded-xl border border-border bg-bg p-4">
+                  <project.diagram />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
       </div>
     </motion.div>
   )

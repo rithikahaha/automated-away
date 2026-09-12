@@ -1,3 +1,7 @@
+import AgentFlow from '../components/diagrams/AgentFlow'
+import SupplyChainFlow from '../components/diagrams/SupplyChainFlow'
+import RevenueFlow from '../components/diagrams/RevenueFlow'
+
 export const projects = [
   {
     title: 'AI Data Analyst with Claude Code',
@@ -10,6 +14,8 @@ export const projects = [
     github: 'https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code',
     demo: 'https://ai-data-analyst-claude-code.streamlit.app/',
     demoLabel: 'Live dashboard',
+    diagram: AgentFlow,
+    blog: null,
   },
   {
     title: 'Global Supply Chain Audit',
@@ -22,6 +28,8 @@ export const projects = [
     github: 'https://github.com/rithikahaha/Supply-Chain-Audit',
     demo: 'https://public.tableau.com/app/profile/rithika.h8756/viz/SupplyChainSLAAudit/SupplyChainSLAAudit',
     demoLabel: 'Tableau Public',
+    diagram: SupplyChainFlow,
+    blog: null,
   },
   {
     title: 'Customer & Revenue Analytics',
@@ -32,5 +40,7 @@ export const projects = [
     image: '/images/ecommerce.png',
     tags: ['AWS', 'SQL', 'Python', 'Scikit-learn', 'Power BI'],
     github: 'https://github.com/rithikahaha/E-commerce-analytics-with-cohort-analysis',
+    diagram: RevenueFlow,
+    blog: null,
   },
 ]
