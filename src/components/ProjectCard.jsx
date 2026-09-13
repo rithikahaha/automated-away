@@ -30,9 +30,9 @@ export default function ProjectCard({ project, index }) {
           className="w-full md:w-1/2"
         >
           {/* laptop screen */}
-          <div className="relative rounded-t-xl rounded-b-[4px] border-[10px] border-b-0 border-border bg-bg p-0 shadow-2xl">
-            <span className="absolute left-1/2 top-0 z-10 h-1.5 w-1.5 -translate-x-1/2 translate-y-[-1px] rounded-full bg-surface" />
-            <div className="relative aspect-[16/10] overflow-hidden rounded-t-[3px]">
+          <div className="relative rounded-t-2xl rounded-b-md border-[16px] border-b-[7px] border-[#3a3a48] bg-black p-0 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.85)]">
+            <span className="absolute left-1/2 top-1/2 z-10 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black ring-1 ring-white/10" />
+            <div className="relative aspect-[16/10] overflow-hidden rounded-[3px]">
               <motion.img
                 style={{ y: imageY, scale: imageScale }}
                 src={project.image}
@@ -41,9 +41,11 @@ export default function ProjectCard({ project, index }) {
               />
             </div>
           </div>
-          {/* laptop base */}
-          <div className="relative mx-auto h-3 w-full rounded-b-lg bg-gradient-to-b from-border to-[#181820] shadow-lg">
-            <span className="absolute left-1/2 top-0 h-1.5 w-14 -translate-x-1/2 rounded-b-md bg-bg" />
+          {/* hinge shadow */}
+          <div className="mx-auto h-1 w-[92%] rounded-b-full bg-black/50 blur-[2px]" />
+          {/* laptop base, wider than the screen like a real hinge overhang */}
+          <div className="relative mx-auto -mt-1 h-5 w-[106%] -translate-x-[3%] rounded-b-2xl bg-gradient-to-b from-[#4a4a58] to-[#232330] shadow-[0_12px_24px_-8px_rgba(0,0,0,0.6)]">
+            <span className="absolute left-1/2 top-0 h-2 w-24 -translate-x-1/2 rounded-b-xl bg-bg" />
           </div>
         </motion.div>
 
