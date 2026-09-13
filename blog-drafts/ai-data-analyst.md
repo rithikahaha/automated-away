@@ -4,7 +4,7 @@
 - **The problem:** I do data analysis for a living. Someone asks a question in Slack. I spend 40 minutes writing SQL, running a test, building a chart, to answer something they typed in 5 seconds.
 - **What I built:** a team of 7 AI agents on Claude Code that takes a plain-English business question and answers it the way a real analytics team would: with SQL, a significance test, or a model, whichever the question actually needs, plus honest caveats when the data doesn't support a clean story.
 - **The honest part:** AI wrote most of the code here. SQL, Python, dbt models, all of it. What it didn't do is decide what was worth building, or catch it when it was wrong. This case study shows you both halves: the system, and my actual judgment calls on top of it.
-- **Proof it's not just a demo:** real example Q&As with real output, an eval framework, a 24-test pytest suite, 40 passing dbt checks, and two real bugs I caught and fixed, shown with the actual diffs.
+- **Proof it's not just a demo:** real example Q&As with real output, an eval framework, a 34-test pytest suite, 40 passing dbt checks, and two real bugs I caught and fixed, shown with the actual diffs.
 - Every code block below has a plain-English "Line by line" breakdown. No assumed syntax knowledge.
 
 ## Jump to a section
@@ -21,6 +21,7 @@
 - [How it knows something is statistically real](#how-it-knows-something-is-statistically-real)
 - [The churn model](#the-churn-model)
 - [Real questions, real answers](#real-questions-real-answers)
+- [Beyond one question: the rest of the job](#beyond-one-question-the-rest-of-the-job)
 - [How the agents get graded](#how-the-agents-get-graded)
 - [Bug 1: the chart that lied](#bug-1-the-chart-that-lied)
 - [Bug 2: the pattern that wasn't real](#bug-2-the-pattern-that-wasnt-real)
@@ -76,7 +77,16 @@ never skips the steps that make it a trustworthy one.
 4. Analyze. Route to whichever specialist owns the actual method.
 5. Share. A chart, if it makes the answer clearer than a table would.
 6. Act. Close with "so what," a plain-English answer and its business
-   implication, not just a restated stat.
+   implication, not just a restated stat. If the answer makes a real
+   recommendation someone could act on, log it in knowledge/decision_log.md.
+
+## Beyond one question
+- Multiple open requests at once? Use the request-triage skill to rank them
+  before starting on any one.
+- A stakeholder proposing a new experiment, not asking for a readout on one
+  already run? Route to data-scientist's experiment-design skill first.
+- A term or number that's disputed, or missing from the glossary? That's
+  ai-engineer's metric-governance skill, not a one-off answer.
 
 ## Output shape
 Answer, why it matters, evidence, query, caveats. Never fabricate a number
@@ -87,6 +97,7 @@ you did not get from a query.
 - `tools: Read, Grep, Glob, Bash, Agent`: this list in the frontmatter is a permission list. `Agent` is the one that matters most here, it's what lets this file call the other 6 agents. No specialist agent below has this permission.
 - The six phases (Ask, Prepare, Process, Analyze, Share, Act) are the standard shape of a real analytics workflow, not something invented for this project. Naming them explicitly is what stops a fast AI answer from quietly skipping the "boring" middle steps, confirming the data is trustworthy and cleaning it, that people forget when they're excited about the analysis part.
 - "Never fabricate a number you did not get from a query" is a literal instruction in the file, not something I'm paraphrasing. It's there because an LLM will confidently guess a plausible-sounding number if you don't explicitly forbid it.
+- The "Beyond one question" block is the newest part of this file. It's the router for everything covered in the "Beyond one question: the rest of the job" section further down, it exists so `analyst-lead` doesn't just answer whatever's asked, it recognizes when the actual job is triage, experiment design, or metric governance instead of a straight query.
 
 ### sql-engineer, the specialist
 
@@ -250,7 +261,7 @@ numbers directly instead of forcing a chart.
 
 ## Skills: reusable playbooks
 
-Agents are roles. Skills are recipes a role follows for a specific, repeatable kind of analysis. There are 6:
+Agents are roles. Skills are recipes a role follows for a specific, repeatable kind of analysis. There are 9, 6 for answering a single question well, 3 for the ongoing work that happens around and across questions:
 
 | Skill | What it standardizes |
 |---|---|
@@ -260,6 +271,9 @@ Agents are roles. Skills are recipes a role follows for a specific, repeatable k
 | `cohort-retention` | Group users by signup month, track retention by month offset, explicitly flags that young cohorts can't be fairly compared to old ones yet. |
 | `anomaly-detection` | Trailing baseline plus a threshold, then ruling out obvious causes (one outlier account, a data gap) before calling something a real anomaly. |
 | `executive-summary` | The output format every answer follows: headline, so-what, evidence, how it was calculated, caveats. |
+| `experiment-design` | Checks a proposed A/B test is even worth running, hypothesis, minimum detectable effect, required sample size, and whether the traffic exists to reach it, before any data is collected. |
+| `metric-governance` | Adds or changes a metric definition in the glossary with a dated, logged reason, instead of a silent edit. |
+| `request-triage` | Ranks a backlog of competing stakeholder questions (impact x confidence x ease) when there's more asked than can be answered right now. |
 
 Full text of the one every question runs through first:
 
@@ -628,6 +642,118 @@ Agents: `analyst-lead` to `data-scientist`, skill: `executive-summary`.
 
 The system also checked whether integration adoption predicts retention: adopters churned at 17.5% versus 27.1% for non-adopters, a 35% relative gap. Run through the two-proportion z-test above, that came back **p = 0.075**, not significant, partly because the non-adopter group was only 59 accounts. Reported as "promising, worth a real experiment, not yet confirmed," not as a finding. The churn model then scored every active account individually, naming specific at-risk accounts rather than just the segment average.
 
+**"How's onboarding doing?"**
+Agent: `analyst-lead` alone, no specialist needed, the actual work here is scoping the question, not running one.
+> Interpreting this as the onboarding funnel (signup, then completed onboarding, then created a project), since that's what this warehouse tracks and it's the standard reading of "onboarding" at a product company. If you meant time-to-activate or something else, say so and I'll rerun it.
+>
+> 71.6% of signups complete onboarding, and 61.9% of those go on to activate.
+
+This one earns its place as its own example precisely because it's small: a vaguely-scoped question answered with the wrong interpretation, stated confidently, is worse than a slower answer. Restating the interpretation up front means a stakeholder catches a mismatch in one sentence instead of after they've already acted on the wrong number. Nothing about this needed SQL to get complicated, it needed the Ask phase taken seriously.
+
+## Beyond one question: the rest of the job
+
+Everything above is what happens once you already know which question to work on. That's maybe half the actual job. I went back and built the other half: the parts of being a data analyst that happen around and across questions, not inside any single one of them. This is also the part of the project I'm proudest of, because it's the part a "write me a SQL query" prompt would never think to build, and it's the part that actually separates a data analyst from a query-writer.
+
+### Catching a broken pipeline before anyone asks a question
+
+`pipelines/data_quality.py` (covered above) catches a bad *load*, nulls, duplicates, broken references, at the moment data comes in. It says nothing about a pipeline that loaded fine yesterday and quietly stopped updating today. That's a different failure mode, and it needed a different check: `pipelines/monitor.py`, run on a schedule (`.github/workflows/monitor.yml`), not just at load time.
+
+```python
+def check_freshness_lag(
+    lagging_dates: pd.Series,
+    reference_dates: pd.Series,
+    lagging_name: str,
+    reference_name: str,
+    max_lag_days: int = 30,
+) -> Alert:
+    lagging_latest = pd.to_datetime(lagging_dates).max()
+    reference_latest = pd.to_datetime(reference_dates).max()
+    lag_days = (reference_latest - lagging_latest).days
+
+    breached = lag_days > max_lag_days
+    return Alert(
+        check=f"{lagging_name} freshness vs {reference_name}",
+        severity="warning" if breached else "ok",
+        detail=f"{lagging_name} is {lag_days} day(s) behind {reference_name}'s latest (limit {max_lag_days})",
+    )
+```
+
+**Line by line:**
+- This checks whether one table's newest date is suspiciously far behind another table's newest date, when the two should normally track each other closely. Product-usage events falling behind the newest account signups usually means the events pipeline stalled while signups kept flowing in from somewhere else.
+- `.max()` on a date column finds the most recent date in it. Subtracting one from the other, `.days`, gives a plain number of days of lag.
+- `breached = lag_days > max_lag_days`: the actual check, is that gap bigger than the allowed 30 days.
+
+Two more checks live alongside it: `check_calendar_gaps` flags any calendar month inside the data's own date range with zero rows (a silent pipeline failure usually looks exactly like a clean gap, not an error message), and `check_month_over_month_volume` flags when the most recently *completed* month's row count drops more than 40% against its own trailing 3-month average (the still-filling-in current month is deliberately excluded, comparing a partial month to full ones would false-alarm every single run).
+
+**Why this matters:** a stakeholder asking a question and getting a wrong answer from stale data is a worse failure than the pipeline just being down, because nobody knows to distrust the number. This check exists to catch that gap before a human ever notices it the hard way.
+
+### Checking an experiment is worth running, before collecting a single row
+
+`experiments/ab_test.py` already had the readout math, the two-proportion z-test used in the integration-adoption example above. What it didn't have was the step that comes *before* that: is this experiment even feasible to run.
+
+```python
+def estimated_weeks_to_reach_sample_size(
+    required_n_per_group: int,
+    weekly_eligible_units: float,
+    traffic_split: float = 0.5,
+) -> float:
+    weekly_per_arm = weekly_eligible_units * traffic_split
+    if weekly_per_arm <= 0:
+        return float("inf")
+    return required_n_per_group / weekly_per_arm
+```
+
+**Line by line:**
+- `required_n_per_group`: how many accounts (or users) each arm of the test needs, computed by `required_sample_size_per_group`, a function that already existed, from the baseline rate and the smallest effect worth detecting.
+- `weekly_eligible_units`: how many new accounts or users become available per week to enter the test at all, pulled from a real query against the warehouse, never assumed.
+- `weekly_per_arm = weekly_eligible_units * traffic_split`: splits that weekly volume across the test's arms (50/50 by default).
+- The last line just divides: total needed per arm, divided by how many arrive per arm per week, equals weeks needed.
+
+I ran this against a real proposed test, a randomized onboarding-flow change meant to cut Starter-plan churn:
+
+```
+Design check: is a randomized onboarding-flow test worth running at all?
+Current churn rate: 42.0%; smallest reduction worth acting on: 5% points
+Required sample size per arm: 1245
+New accounts arriving per week: 4.3
+Estimated weeks to reach that sample size: 579.5
+-> Too slow to justify running as designed; narrow the effect size or pick a higher-volume proxy metric instead.
+```
+
+**Why this matters:** 580 weeks is over 11 years. Nobody would ever actually let a test run that long, but without this check being run *before* the test starts, the realistic failure mode isn't "we waited 11 years," it's "we ran it for 3 weeks, got a shrug of a result, and either quietly dropped a possibly-good idea or shipped it anyway without real evidence either way." Running the feasibility check first turns an invisible waste of a quarter into an explicit, immediate decision: redesign the test (bigger effect size, a higher-volume proxy metric) or don't run it. That decision belongs to `data-scientist`'s new `experiment-design` skill, which also makes you name guardrail metrics and lock the randomization unit before any of this happens, not after seeing a result you already like.
+
+### Keeping one definition of a metric, with a paper trail
+
+The RAG grounding covered earlier (`rag/retrieve.py`) answers *one question* using an existing glossary entry. It says nothing about who decides what that entry should say, or what happens when someone wants to change it. That's `knowledge/metrics_glossary.md`'s new `## Changelog` section, governed by the `metric-governance` skill:
+
+```markdown
+## Changelog
+
+- **2026-09-13**: Added this changelog. All six definitions above were
+  correct as of the B2B SaaS domain swap and hadn't changed since; this just
+  makes future changes to any of them visible instead of a silent edit.
+```
+
+**Line by line:**
+- This is a plain markdown list, one dated line per change, read top to bottom like a commit log for a single document.
+- The rule the skill enforces: never silently edit a definition. If "active user" ever changes from a weekly-login count to something else, the changelog is the only reason someone six months later can explain why a chart's number suddenly moved.
+
+The skill's steps also force a check most metric disputes actually hinge on: is this really a *new* metric, or a variant of one that already exists but sounds similar ("active user" and "active account" mean different things in this schema, and collapsing them is exactly how a model ends up trained on the wrong column). And every definition has to be written as an exact, implementable query condition, not a sentence two engineers could each read differently and both be technically right.
+
+### Deciding what to work on first
+
+None of the six phases in `analyst-lead`'s process say anything about *which* question to start on when three stakeholders ask at once. That gap is the `request-triage` skill: score each open request 1-5 on **Impact** (does the answer change a real decision), **Confidence** (does the data actually exist and is it clean), and **Ease** (one query, or a full stats/ML pass), multiply the three into a simple ICE score, then flag anything time-boxed separately, since a lower-scoring question tied to a decision happening this week can still outrank a higher-scoring one with no deadline. The last step matters as much as the scoring: say what's *not* getting worked on, and why, so a stakeholder who never hears back can see they were deprioritized on purpose instead of just wondering if the request got lost.
+
+### Closing the loop on whether a recommendation actually worked
+
+Every one of the "real questions, real answers" above ends in a recommendation. `knowledge/decision_log.md` is the part that comes after that, whether the recommendation was actually acted on, and whether it worked:
+
+| Date | Question | Recommendation | Decision made | Outcome |
+|---|---|---|---|---|
+| 2026-09-13 | "Are we healthy overall, and which accounts need attention this quarter?" | Prioritize customer-success outreach on Starter-plan accounts scoring highest on the churn model, and treat the integration-adoption/churn link as worth a real experiment, not yet a rollout. | Not yet made, this is sample data illustrating the log's shape, not a real decision. | Pending |
+
+**Why this matters:** the p=0.075 integration-adoption finding from earlier is exactly the kind of result that quietly turns into "we rolled it out anyway" with nobody tracking whether it actually helped. If that experiment ever runs, its result becomes a new row here, referencing this one, not a one-off Slack message nobody can find again in six months. An analyst who never checks back is producing numbers, not outcomes, and this file is what makes checking back an actual habit instead of a nice intention.
+
 ## How the agents get graded
 
 `evals/eval_cases.md` is a fixed set of 7 golden business questions, each with an expected answer shape, that `ai-engineer` runs periodically to check the system hasn't regressed. Two examples:
@@ -678,7 +804,7 @@ The honest answer was "promising, not proven." Not "found it." Shipping that 35%
 
 ## Test suite, CI, and deployment
 
-24 pytest tests. A real one in full, `tests/test_warehouse.py`:
+34 pytest tests. A real one in full, `tests/test_warehouse.py`:
 
 ```python
 def test_read_only_guard_blocks_writes():
@@ -745,6 +871,9 @@ AI wrote the SQL, the Python, the dbt models. Here's what it didn't decide:
 - **Running the significance test instead of trusting the eyeball comparison** on the 35% churn number, and reporting p=0.075 honestly instead of a fake win.
 - **The read-only guard as a hard requirement**, not a nice-to-have, because an agent with write access to a real warehouse is a genuinely different risk profile.
 - **Keeping the cloud deployment as documentation, not action.** Every agent instruction file explicitly forbids provisioning real infrastructure. That boundary was a deliberate design choice, not a limitation Claude imposed on itself.
+- **Building the feasibility check at all, once I realized nothing stopped an experiment from being designed and run without ever checking the traffic could reach a real answer.** The 580-week result on the onboarding test is exactly the kind of finding that only exists because I decided that check needed to run before any data collection, not after a disappointing readout.
+- **Making a changelog mandatory for the metrics glossary, not optional.** A metric definition that can change silently is worse than no glossary at all, because it looks trustworthy while quietly drifting.
+- **Logging a decision even before there was a real decision to log.** The decision-log entry is explicitly marked as sample data, not a real outcome, because the habit of closing the loop needed to exist in the system from day one, not bolted on retroactively once a real recommendation happened to get made.
 
 Stated as a direct split, the same way I'd answer it in an interview:
 
@@ -784,18 +913,23 @@ A regex in `connectors/warehouse.py` that only allows statements starting with W
 **"What would you change with more time?"**
 Point this at a real, messier, unowned warehouse instead of one I control. That's a genuinely different problem: tables nobody remembers the reasoning behind, inconsistent naming, no clean glossary already written for you.
 
+**"That's how you'd answer one question. What about the rest of the job?"**
+Answering one question well is maybe half of it. I also built the parts around that: `pipelines/monitor.py` runs on a schedule and checks whether the pipeline's quietly stalled or a metric has drifted, so a problem gets caught before a stakeholder asks and gets a wrong answer from it. Before I'd let anyone run an experiment, there's a feasibility check, required sample size against actual signup volume, that already caught one experiment idea in this project that would've taken over 500 weeks to reach significance on the traffic available, which is a decision to redesign it, not run it and hope. There's a changelog on the metrics glossary so a definition change is traceable instead of silent, a triage method for when more questions come in than I can answer at once, and a decision log that tracks whether a past recommendation actually got acted on. None of that shows up in a single query, but it's most of what the job actually is day to day.
+
 **Numbers to have ready, all reproducible:**
-- 24 pytest tests passing, CI on every push.
+- 34 pytest tests passing, CI on every push.
 - 40 dbt checks passing (28 column tests plus model-build checks), matching the Python pipeline's output exactly.
 - Churn model AUC: 0.6675, exactly reproducible via fixed random seeds.
 - WAU: 234 to 411 over 26 weeks (+75.6%).
 - Net revenue retention: 108.5%.
 - Starter churn 28.8% vs Enterprise 6.7%.
 - Integration-adoption churn: 17.5% vs 27.1%, p=0.075, not significant.
+- Onboarding funnel: 71.6% of signups complete onboarding, 61.9% of those go on to activate.
+- Proposed onboarding-flow experiment: ~580 weeks needed to reach a conclusive sample size on real signup volume, the feasibility check that says redesign it, don't run it, before any data is collected.
 
 ## The stack
 
-Python, SQL, Claude Code (7 agents, 6 skills), dbt (40 checks across 8 models), pytest (24 tests), GitHub Actions, Streamlit + Altair, scikit-learn, TF-IDF retrieval, Terraform (unapplied).
+Python, SQL, Claude Code (7 agents, 9 skills), dbt (40 checks across 8 models), pytest (34 tests), GitHub Actions, Streamlit + Altair, scikit-learn, TF-IDF retrieval, Terraform (unapplied).
 
 **Live dashboard:** [ai-data-analyst-claude-code.streamlit.app](https://ai-data-analyst-claude-code.streamlit.app/)
 **Code:** [github.com/rithikahaha/AI-Data-Analyst-Claude-Code](https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code)

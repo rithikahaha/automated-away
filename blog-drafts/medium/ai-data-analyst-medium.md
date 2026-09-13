@@ -7,7 +7,7 @@ I do data analysis for a living, and I got tired of spending 40 minutes writing 
 - Takes a plain-English business question and routes it to whichever specialist agent owns that kind of work
 - Answers with a number, a chart, the database query that produced it, and any caveats, never a bare stat
 - Runs against a realistic sample B2B SaaS dataset: accounts, users, subscriptions, product usage events
-- Backed by 40 automated data-quality checks and a 24-test suite on every code change
+- Backed by 40 automated data-quality checks and a 34-test suite on every code change
 - Refuses to fabricate a number it didn't get from a query
 
 ## Why 7 agents instead of 1 prompt
@@ -70,6 +70,9 @@ Agents are roles. "Skills" are recipes a role follows for a specific, repeatable
 - **cohort-retention**: group by signup month, track retention by month offset
 - **anomaly-detection**: baseline plus threshold, then rule out obvious causes before calling something a real anomaly
 - **executive-summary**: the output format every answer follows, headline, so-what, evidence, method, caveats
+- **experiment-design**: checks a proposed A/B test is even worth running before any data is collected (more below)
+- **metric-governance**: adds or changes a metric's definition with a dated, logged reason instead of a silent edit
+- **request-triage**: ranks competing stakeholder questions when there's more asked than can be answered right now
 
 ## The warehouse guardrail
 
@@ -229,6 +232,58 @@ Of 3,206 signups, only 1,421 (44%) ever activated. The biggest single leak is be
 **"Are we healthy overall, and which accounts need attention?"**
 Net revenue retention is 108.5%, healthy. Starter-plan accounts churn at 28.8% versus 6.7% for Enterprise. The churn model then names the specific at-risk accounts, not just the segment average, and separately, a comparison that looked like a 35% churn improvement from a certain integration came back not statistically significant (more on that below), reported honestly as "promising, not proven."
 
+**"How's onboarding doing?"**
+No specialist needed for this one, `analyst-lead` alone. "How's onboarding doing" could mean funnel completion, time to activate, or something nobody's tracking. Instead of guessing or stalling on a clarifying question, it states its interpretation up front: onboarding funnel (signup, then completed onboarding, then created a project), since that's what the warehouse tracks. 71.6% of signups complete onboarding, 61.9% of those go on to activate. A vaguely-scoped question answered confidently with the wrong interpretation is worse than a slower, correctly-scoped one, restating the interpretation means a mismatch gets caught in one sentence instead of after someone's already acted on the wrong number.
+
+## Beyond one question: the rest of the job
+
+Everything above answers one question well. That's maybe half the actual job. Here's the other half, the parts of being a data analyst that happen around and across questions, not inside any single one.
+
+**Catching a broken pipeline before anyone asks.** The data-quality checks earlier catch a bad load, at the moment data comes in. They say nothing about a pipeline that loaded fine yesterday and quietly stopped today. A separate monitor, run daily by a scheduled job (not just at load time), checks three things: whether one table's newest data is falling suspiciously behind another it should track closely, whether any calendar month has an unexplained zero-row gap, and whether the latest completed month's volume dropped sharply against its own trailing average.
+
+```python
+def check_freshness_lag(lagging_dates, reference_dates, lagging_name, reference_name, max_lag_days=30):
+    lag_days = (pd.to_datetime(reference_dates).max() - pd.to_datetime(lagging_dates).max()).days
+    return Alert(severity="warning" if lag_days > max_lag_days else "ok",
+                 detail=f"{lagging_name} is {lag_days} day(s) behind {reference_name}'s latest")
+```
+
+- Product-usage events falling behind the newest account signups usually means the events pipeline stalled while signups kept flowing in from somewhere else
+- A stakeholder getting a wrong answer from stale data is a worse failure than the pipeline being visibly down, because nobody knows to distrust the number
+
+**Checking an experiment is worth running, before collecting a single row.** The stats code already covered above can grade a test after it's run. Nothing stopped someone from designing an infeasible test and only finding out 3 weeks in. So there's a feasibility check that runs first:
+
+```python
+def estimated_weeks_to_reach_sample_size(required_n_per_group, weekly_eligible_units, traffic_split=0.5):
+    weekly_per_arm = weekly_eligible_units * traffic_split
+    return required_n_per_group / weekly_per_arm if weekly_per_arm > 0 else float("inf")
+```
+
+Run against a real proposed test, a randomized onboarding-flow change to cut Starter churn:
+
+```
+Required sample size per arm: 1245
+New accounts arriving per week: 4.3
+Estimated weeks to reach that sample size: 579.5
+-> Too slow to justify running as designed; narrow the effect size or pick a higher-volume proxy metric instead.
+```
+
+- 580 weeks is over 11 years. The realistic risk was never actually waiting that long, it was running the test for 3 weeks, getting an inconclusive shrug, and either dropping a possibly-good idea or shipping it anyway without real evidence
+- Running the feasibility check first turns an invisible waste of a quarter into an immediate, explicit decision: redesign the test, or don't run it
+
+**Keeping one definition of a metric, with a paper trail.** The glossary lookup covered earlier answers one question using an existing definition. It says nothing about who decides what that definition should be, or what happens when someone wants to change it. A changelog section on the glossary now logs every addition or change with a date and a reason, so if "active user" ever changes definition, there's a record of why a chart's number moved, instead of a silent edit nobody can trace six months later.
+
+**Deciding what to work on first.** None of the six phases above say which question to start on when three stakeholders ask at once. A triage method scores each open request 1 to 5 on impact (does the answer change a real decision), confidence (does the data actually exist and is it clean), and ease (one query, or a full stats pass), multiplies the three into a simple score, then separately flags anything tied to a deadline, since a lower-scoring question due this week can outrank a higher-scoring one with no deadline. The last step matters as much as the scoring: it states what's not getting worked on, and why, instead of silently dropping requests.
+
+**Closing the loop on whether a recommendation actually worked.** Every answer above ends in a recommendation. A decision log tracks what happens after: was it acted on, did it work.
+
+| Date | Question | Recommendation | Outcome |
+|---|---|---|---|
+| 2026-09-13 | Are we healthy overall, and which accounts need attention? | Prioritize outreach on highest-risk Starter accounts; treat the integration-adoption link as worth a real experiment, not a rollout | Pending |
+
+- The p=0.075 integration-adoption result from earlier is exactly the kind of finding that quietly turns into "we rolled it out anyway" with nobody tracking whether it helped. If that experiment runs, its result becomes a new row here, not a Slack message nobody can find in six months
+- An analyst who never checks back is producing numbers, not outcomes
+
 ## How the agents get checked for regressions
 
 A fixed set of 7 "golden" business questions, each with an expected answer shape, that `ai-engineer` periodically re-runs by hand and compares against.
@@ -268,7 +323,7 @@ Integration-adopting accounts churned at 17.5% versus 27.1% for non-adopters, a 
 - run: pytest -v
 ```
 
-- 24 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration)
+- 34 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration)
 - It rebuilds the entire sample database through the real pipeline before testing against it, so a broken pipeline gets caught, not just a broken individual query
 - Deployment plans exist for AWS, GCP, and Azure (Terraform, a way of writing infrastructure as code), explicitly illustrative and never applied to a real cloud account
 - Every agent talks to the warehouse through one connection string, so pointing this at a real Postgres or Snowflake warehouse instead of the local sample is a config change, not a rewrite
@@ -286,10 +341,12 @@ No, and I say that upfront. Every organization, user, and event in this dataset 
 | Ran the stats test | Whether "not significant" gets reported honestly instead of buried |
 | Built the dashboard | Whether the chart order was actually correct, it wasn't, first try |
 | Suggested the churn model features | Whether MLOps belonged in scope at all, it didn't |
+| Wrote the feasibility-check math | Deciding that check needed to exist before an experiment starts, not after a disappointing readout |
+| Wrote the decision-log table | Logging a decision before there was a real one to log, so the habit exists from day one |
 
 ## Conclusion
 
-AI wrote essentially all of the code here. It didn't decide the team should map to real job titles, catch a chart quietly lying, or refuse to let a shaky p-value pass as confirmed. That's still the job. AI is fast at producing things that look right. Verifying they actually are is where the time went.
+AI wrote essentially all of the code here. It didn't decide the team should map to real job titles, catch a chart quietly lying, refuse to let a shaky p-value pass as confirmed, or notice that answering questions well is only half the job. That's still the job. AI is fast at producing things that look right. Verifying they actually are, and building the parts that don't show up in any single query, is where the time went.
 
 **Live dashboard:** [ai-data-analyst-claude-code.streamlit.app](https://ai-data-analyst-claude-code.streamlit.app/)
 **Code:** [github.com/rithikahaha/AI-Data-Analyst-Claude-Code](https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code)
