@@ -12,7 +12,7 @@ I do data analysis for a living, and I got tired of spending 40 minutes writing 
 
 ## Why 7 agents instead of 1 prompt
 
-One AI trying to be equally good at database queries, statistics, and infrastructure ends up mediocre at all three, the same way one person can't be the best at every job on a team. It was originally 11 agents, one per narrow skill. I rejected that, no real company staffs a team that granularly, and rebuilt it around 7 roles that map to actual job titles. I also cut a dedicated MLOps agent entirely (MLOps is the ongoing work of monitoring and retraining models in production), not because it didn't work, but because that's a stretch past what a Data Analyst role actually needs.
+One AI trying to be equally good at database queries, statistics, and infrastructure ends up mediocre at all three. This isn't seven job openings, it's one analyst-driven system splitting the 2026 data-analyst skillset (SQL, stats, ML, pipelines, cloud, BI, QA, AI tooling) into 7 specialties so each part gets done well instead of one prompt being mediocre at all of it. It was originally 11 agents, one per narrow skill, which fragmented the work at too fine a grain to route into cleanly, and I rebuilt it around 7 coherent specialties instead. I also cut a dedicated MLOps agent entirely (MLOps is the ongoing work of monitoring and retraining models in production), not because it didn't work, but because that's a stretch past what a Data Analyst role actually needs.
 
 Each agent is a plain markdown file: a short description, a permissions list, and instructions written in English, not a line of traditional code.
 
@@ -337,7 +337,7 @@ No, and I say that upfront. Every organization, user, and event in this dataset 
 | AI did | I decided |
 |---|---|
 | Wrote the SQL, Python, and dbt models | Which business questions were worth answering |
-| Drafted the agent instructions | Which agent roster maps to a real team, rejected the first draft |
+| Drafted the agent instructions | Which split into specialties actually covers the skillset without fragmenting it, rejected the first, 11-agent draft |
 | Ran the stats test | Whether "not significant" gets reported honestly instead of buried |
 | Built the dashboard | Whether the chart order was actually correct, it wasn't, first try |
 | Suggested the churn model features | Whether MLOps belonged in scope at all, it didn't |
@@ -346,7 +346,7 @@ No, and I say that upfront. Every organization, user, and event in this dataset 
 
 ## Conclusion
 
-AI wrote essentially all of the code here. It didn't decide the team should map to real job titles, catch a chart quietly lying, refuse to let a shaky p-value pass as confirmed, or notice that answering questions well is only half the job. That's still the job. AI is fast at producing things that look right. Verifying they actually are, and building the parts that don't show up in any single query, is where the time went.
+AI wrote essentially all of the code here. It didn't decide how the skillset should split into specialties, catch a chart quietly lying, refuse to let a shaky p-value pass as confirmed, or notice that answering questions well is only half the job. That's still the job. AI is fast at producing things that look right. Verifying they actually are, and building the parts that don't show up in any single query, is where the time went.
 
 **Live dashboard:** [ai-data-analyst-claude-code.streamlit.app](https://ai-data-analyst-claude-code.streamlit.app/)
 **Code:** [github.com/rithikahaha/AI-Data-Analyst-Claude-Code](https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code)

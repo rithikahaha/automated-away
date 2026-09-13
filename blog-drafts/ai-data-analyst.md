@@ -2,7 +2,7 @@
 
 **TL;DR, what this is and why it exists**
 - **The problem:** I do data analysis for a living. Someone asks a question in Slack. I spend 40 minutes writing SQL, running a test, building a chart, to answer something they typed in 5 seconds.
-- **What I built:** a team of 7 AI agents on Claude Code that takes a plain-English business question and answers it the way a real analytics team would: with SQL, a significance test, or a model, whichever the question actually needs, plus honest caveats when the data doesn't support a clean story.
+- **What I built:** one analyst-driven system on Claude Code, split into 7 specialties covering the full 2026 data-analyst skillset, that takes a plain-English business question and answers it with SQL, a significance test, or a model, whichever the question actually needs, plus honest caveats when the data doesn't support a clean story.
 - **The honest part:** AI wrote most of the code here. SQL, Python, dbt models, all of it. What it didn't do is decide what was worth building, or catch it when it was wrong. This case study shows you both halves: the system, and my actual judgment calls on top of it.
 - **Proof it's not just a demo:** real example Q&As with real output, an eval framework, a 34-test pytest suite, 40 passing dbt checks, and two real bugs I caught and fixed, shown with the actual diffs.
 - Every code block below has a plain-English "Line by line" breakdown. No assumed syntax knowledge.
@@ -11,7 +11,7 @@
 
 - [The problem, in more detail](#the-problem-in-more-detail)
 - [Why 7 agents, not 1 prompt, not 11 agents](#why-7-agents-not-1-prompt-not-11-agents)
-- [Meet the team: all 7 agents in full](#meet-the-team-all-7-agents-in-full)
+- [The 7 specialties, in full](#the-7-specialties-in-full)
 - [Skills: reusable playbooks](#skills-reusable-playbooks)
 - [The warehouse guardrail](#the-warehouse-guardrail)
 - [ETL: raw data to warehouse](#etl-raw-data-to-warehouse)
@@ -36,13 +36,13 @@ Every data analyst has lived this: a business question shows up in plain English
 
 Worse, a single generalist AI prompt doesn't fix this. Some questions need SQL. Some need a significance test. Some need a predictive model. One prompt trying to be equally good at all three ends up mediocre at each, the same problem you'd get handing all three jobs to one overloaded junior analyst.
 
-So I built a small team instead. Not a chatbot. A team, with the same division of labor a real analytics org has: someone who writes queries, someone who runs the stats, someone who owns the pipelines, someone who builds the dashboard, someone who checks everyone else's work.
+So I split the job into specialties instead. Not a chatbot, and not seven job openings either, this is one analyst-driven system, `analyst-lead`, splitting the 2026 data-analyst skillset into 7 specialties so each part gets done well instead of one prompt being mediocre at all of it: someone (well, some specialty) writes queries, runs the stats, owns the pipelines, builds the dashboard, checks everyone else's work.
 
 ## Why 7 agents, not 1 prompt, not 11 agents
 
-The first version of this had 11 agents, one per narrow skill. I rejected that design and had it rebuilt around 7, and the reason is worth stating plainly: 11 agents isn't how a real team is structured. A real analytics team has a lead, a SQL person, a data scientist, a platform/infra person, a BI person, someone who owns AI/ML tooling, and QA. Seven roles. Mapping the agents to actual job titles instead of actual tasks makes the system easier to reason about and easier to route into, one agent per "who would own this in real life," not one agent per verb.
+The first version of this had 11 agents, one per narrow skill. I rejected that design and had it rebuilt around 7, and the reasoning is worth stating precisely, because it's easy to get wrong in an interview: this isn't modeling seven separate hires. It's the same 2026 data-analyst skillset (SQL, statistics, ML, pipelines, cloud, BI, QA, AI/RAG tooling) that one analyst is expected to credibly cover today, split into 7 specialties so no single prompt has to be equally good at all of it at once. Eleven agents, one per narrow skill, wasn't wrong because it wasn't "how a real team is structured," it was wrong because it fragmented the work at the level of individual tasks instead of at the level of a coherent specialty, which made routing between them harder to reason about, not easier.
 
-## Meet the team: all 7 agents in full
+## The 7 specialties, in full
 
 Every agent is a markdown file with two parts: frontmatter (name, description, and which tools it's allowed to use) and a body of plain-English instructions. There's no separate router script. Claude Code reads the frontmatter to know an agent exists, and the body tells it how to behave.
 
@@ -864,7 +864,7 @@ The design is deliberately swap-friendly: every agent and skill talks to `connec
 AI wrote the SQL, the Python, the dbt models. Here's what it didn't decide:
 
 - **The domain.** B2B SaaS with seat-based accounts, chosen specifically so it wouldn't overlap with my other portfolio projects.
-- **7 agents, not 11.** The project originally had 11 narrow agents, one per skill. I rejected that as unrealistic, no real company staffs a team that way, and had it rebuilt around 7 roles that map to actual job titles.
+- **7 specialties, not 11 agents.** The project originally had 11 narrow agents, one per skill. I rejected that as the wrong level of splitting, one analyst covering the 2026 skillset needs 7 coherent specialties (SQL, stats/ML, pipelines, cloud, BI, AI/RAG tooling, QA), not a hiring plan and not 11 fragments of individual tasks either.
 - **Cutting an MLOps agent entirely.** An early draft had a dedicated agent for model registry and drift detection. I cut it, not because the code didn't work, but because it was a stretch past what a Data Analyst role actually needs. Scope is a decision, not just a feature list.
 - **AUC over accuracy** for the churn model, because churn is imbalanced and accuracy would lie.
 - **Catching the funnel chart bug**, by opening the actual dashboard and looking, instead of trusting that error-free code meant correct output.
@@ -880,7 +880,7 @@ Stated as a direct split, the same way I'd answer it in an interview:
 | AI (Claude Code) did | I decided |
 |---|---|
 | Wrote the SQL, Python, and dbt models | Which business questions were even worth answering |
-| Drafted the agent instructions | Which agent roster actually maps to a real team (rejected the first draft) |
+| Drafted the agent instructions | Which split into specialties actually covers the 2026 skillset without fragmenting it (rejected the first, 11-agent draft) |
 | Ran the stats test | Whether "not significant" should be reported honestly instead of buried |
 | Built the dashboard | Whether the dashboard's chart order was actually correct (it wasn't, first try) |
 | Suggested the churn model features | Whether MLOps belonged in scope at all (it didn't) |
@@ -896,10 +896,10 @@ What this demonstrates isn't "I found a $100k insight." It's "I can build the sy
 ## Interview prep: questions and answers
 
 **"AI can write SQL and build dashboards. Why does this need you?"**
-Because deciding what was worth building, structuring the agents around real team roles, and catching it when it was wrong (twice, with receipts) is not something the AI did on its own. That's the part I own.
+Because deciding what was worth building, deciding how to split the skillset into specialties, and catching it when it was wrong (twice, with receipts) is not something the AI did on its own. That's the part I own.
 
 **"Why split into 7 agents instead of one prompt?"**
-A generalist prompt trying to be equally good at SQL, statistics, and infrastructure ends up mediocre at all three. Splitting by role also lets me scope permissions tightly, `sql-engineer` literally cannot call other agents or write to the database. It was actually 11 agents at first, one per skill, which isn't how a real team is structured. I also cut a dedicated MLOps agent entirely once I recognized model-registry and drift-detection tooling was a stretch past what a Data Analyst role needs, not because the code didn't work.
+A generalist prompt trying to be equally good at SQL, statistics, and infrastructure ends up mediocre at all three. This isn't modeling seven separate hires, it's one analyst-driven system splitting today's data-analyst skillset into 7 specialties so each part gets done well. Splitting by specialty also lets me scope permissions tightly, `sql-engineer` literally cannot call other agents or write to the database. It was actually 11 agents at first, one per narrow skill, which fragmented the work at too fine a grain to route into cleanly. I also cut a dedicated MLOps agent entirely once I recognized model-registry and drift-detection tooling was a stretch past what a Data Analyst role needs, not because the code didn't work.
 
 **"Walk me through a bug you caught."**
 The funnel chart rendered stages alphabetically instead of in sequence. It ran with no errors and looked fine at a glance. I only caught it by opening the actual dashboard and checking every chart before calling the feature done, which is exactly the habit this project is built to reinforce.
