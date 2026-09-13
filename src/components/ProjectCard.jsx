@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
 import { FiArrowUpRight, FiChevronDown, FiEdit3, FiGithub } from 'react-icons/fi'
+import LaptopMockup from './LaptopMockup'
 
 export default function ProjectCard({ project, index }) {
   const [showDiagram, setShowDiagram] = useState(false)
@@ -29,23 +30,17 @@ export default function ProjectCard({ project, index }) {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="w-full md:w-1/2"
         >
-          {/* laptop screen */}
-          <div className="relative rounded-t-2xl rounded-b-md border-[16px] border-b-[7px] border-[#3a3a48] bg-black p-0 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.85)]">
-            <span className="absolute left-1/2 top-1/2 z-10 h-1.5 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-black ring-1 ring-white/10" />
-            <div className="relative aspect-[16/10] overflow-hidden rounded-[3px]">
-              <motion.img
-                style={{ y: imageY, scale: imageScale }}
-                src={project.image}
-                alt={`${project.title} preview`}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          </div>
-          {/* hinge shadow */}
-          <div className="mx-auto h-1 w-[92%] rounded-b-full bg-black/50 blur-[2px]" />
-          {/* laptop base, wider than the screen like a real hinge overhang */}
-          <div className="relative mx-auto -mt-1 h-5 w-[106%] -translate-x-[3%] rounded-b-2xl bg-gradient-to-b from-[#4a4a58] to-[#232330] shadow-[0_12px_24px_-8px_rgba(0,0,0,0.6)]">
-            <span className="absolute left-1/2 top-0 h-2 w-24 -translate-x-1/2 rounded-b-xl bg-bg" />
+          <div className="drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
+            <LaptopMockup>
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <motion.img
+                  style={{ y: imageY, scale: imageScale }}
+                  src={project.image}
+                  alt={`${project.title} preview`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            </LaptopMockup>
           </div>
         </motion.div>
 
