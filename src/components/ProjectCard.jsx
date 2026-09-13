@@ -10,8 +10,7 @@ export default function ProjectCard({ project, index }) {
     target: sectionRef,
     offset: ['start end', 'end start'],
   })
-  const imageY = useTransform(scrollYProgress, [0, 1], ['-6%', '6%'])
-  const imageScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.94, 1, 0.94])
+  const imageScale = useTransform(scrollYProgress, [0, 0.5, 1], [1, 1.08, 1])
 
   const reversed = index % 2 === 1
 
@@ -31,16 +30,11 @@ export default function ProjectCard({ project, index }) {
           className="w-full md:w-1/2"
         >
           <div className="drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
-            <LaptopMockup>
-              <div className="relative aspect-[16/10] overflow-hidden">
-                <motion.img
-                  style={{ y: imageY, scale: imageScale }}
-                  src={project.image}
-                  alt={`${project.title} preview`}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </LaptopMockup>
+            <LaptopMockup
+              src={project.image}
+              alt={`${project.title} preview`}
+              imageMotionStyle={{ scale: imageScale, transformOrigin: '50% 50%' }}
+            />
           </div>
         </motion.div>
 
