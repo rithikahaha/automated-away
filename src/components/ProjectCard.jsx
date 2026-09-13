@@ -27,15 +27,23 @@ export default function ProjectCard({ project, index }) {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="relative w-full overflow-hidden rounded-3xl border border-border bg-surface md:w-1/2"
+          className="w-full md:w-1/2"
         >
-          <div className="relative aspect-[4/3] overflow-hidden">
-            <motion.img
-              style={{ y: imageY, scale: imageScale }}
-              src={project.image}
-              alt={`${project.title} preview`}
-              className="h-full w-full object-cover"
-            />
+          {/* laptop screen */}
+          <div className="relative rounded-t-xl rounded-b-[4px] border-[10px] border-b-0 border-border bg-bg p-0 shadow-2xl">
+            <span className="absolute left-1/2 top-0 z-10 h-1.5 w-1.5 -translate-x-1/2 translate-y-[-1px] rounded-full bg-surface" />
+            <div className="relative aspect-[16/10] overflow-hidden rounded-t-[3px]">
+              <motion.img
+                style={{ y: imageY, scale: imageScale }}
+                src={project.image}
+                alt={`${project.title} preview`}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          </div>
+          {/* laptop base */}
+          <div className="relative mx-auto h-3 w-full rounded-b-lg bg-gradient-to-b from-border to-[#181820] shadow-lg">
+            <span className="absolute left-1/2 top-0 h-1.5 w-14 -translate-x-1/2 rounded-b-md bg-bg" />
           </div>
         </motion.div>
 
@@ -68,16 +76,6 @@ export default function ProjectCard({ project, index }) {
             className="mt-6 text-lg leading-relaxed text-muted"
           >
             {project.blurb}
-          </motion.p>
-
-          <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.5 }}
-            transition={{ duration: 0.6, delay: 0.15 }}
-            className="mt-4 text-base leading-relaxed text-muted/70"
-          >
-            {project.detail}
           </motion.p>
 
           <motion.div
