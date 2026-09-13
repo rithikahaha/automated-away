@@ -40,7 +40,7 @@ export default function Nav() {
           ))}
           <li>
             <a
-              href="/resume.pdf"
+              href={`${import.meta.env.BASE_URL}resume.pdf`}
               target="_blank"
               rel="noreferrer"
               className="rounded-full border border-border px-3.5 py-1.5 text-text transition-colors hover:border-accent hover:text-accent"

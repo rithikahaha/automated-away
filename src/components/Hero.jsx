@@ -85,7 +85,7 @@ export default function Hero() {
           Get in touch
         </a>
         <a
-          href="/resume.pdf"
+          href={`${import.meta.env.BASE_URL}resume.pdf`}
           target="_blank"
           rel="noreferrer"
           className="rounded-full border border-border px-8 py-3.5 text-base font-medium text-text transition-colors hover:border-accent hover:text-accent"
