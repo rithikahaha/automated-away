@@ -1,7 +1,34 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
-import { FiArrowUpRight, FiChevronDown, FiEdit3, FiGithub } from 'react-icons/fi'
+import {
+  FiAlertTriangle,
+  FiArrowUpRight,
+  FiCheckCircle,
+  FiChevronDown,
+  FiEdit3,
+  FiGithub,
+  FiShoppingBag,
+  FiTrendingUp,
+  FiTruck,
+  FiUsers,
+} from 'react-icons/fi'
 import LaptopMockup from './LaptopMockup'
+import NotificationCard from './NotificationCard'
+
+const notificationsByIndex = [
+  [
+    { icon: FiAlertTriangle, title: 'Churn risk alert', value: 'Starter tier · 28.8%' },
+    { icon: FiTrendingUp, title: 'Weekly report ready', value: 'WAU up 75.6%' },
+  ],
+  [
+    { icon: FiTruck, title: 'SLA breach detected', value: 'First Class · 0% on time' },
+    { icon: FiCheckCircle, title: 'Fix verified', value: 'p < 0.001 · 3 tiers' },
+  ],
+  [
+    { icon: FiShoppingBag, title: 'New order', value: 'São Paulo · R$161.72' },
+    { icon: FiUsers, title: 'Champion segment', value: '7x average spend' },
+  ],
+]
 
 export default function ProjectCard({ project, index }) {
   const [showDiagram, setShowDiagram] = useState(false)
@@ -29,12 +56,28 @@ export default function ProjectCard({ project, index }) {
           transition={{ duration: 0.8, ease: 'easeOut' }}
           className="w-full md:w-1/2"
         >
-          <div className="drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
-            <LaptopMockup
-              src={project.image}
-              alt={`${project.title} preview`}
-              imageMotionStyle={{ scale: imageScale, transformOrigin: '50% 50%' }}
-            />
+          <div className="relative">
+            <div className="drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]">
+              <LaptopMockup
+                src={project.image}
+                alt={`${project.title} preview`}
+                imageMotionStyle={{ scale: imageScale, transformOrigin: '50% 50%' }}
+              />
+            </div>
+            {(notificationsByIndex[index % notificationsByIndex.length] || []).map((n, i) => (
+              <NotificationCard
+                key={n.title}
+                icon={n.icon}
+                title={n.title}
+                value={n.value}
+                delay={0.4 + i * 0.15}
+                className={
+                  i === 0
+                    ? `-top-5 ${reversed ? '-left-5 md:-left-10' : '-right-5 md:-right-10'}`
+                    : `-bottom-6 ${reversed ? '-right-4 md:-right-8' : '-left-4 md:-left-8'}`
+                }
+              />
+            ))}
           </div>
         </motion.div>
 
