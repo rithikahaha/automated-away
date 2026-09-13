@@ -16,8 +16,9 @@ export default function ProjectCard({ project, index }) {
 
   return (
     <section ref={sectionRef} className="py-20 md:py-32">
+      <div className="mx-auto max-w-6xl px-6">
       <div
-        className={`mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 md:gap-16 ${
+        className={`flex flex-col items-center gap-10 md:gap-16 ${
           reversed ? 'md:flex-row-reverse' : 'md:flex-row'
         }`}
       >
@@ -143,25 +144,26 @@ export default function ProjectCard({ project, index }) {
               </button>
             )}
           </motion.div>
-
-          {project.diagram && (
-            <AnimatePresence initial={false}>
-              {showDiagram && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
-                  className="overflow-hidden"
-                >
-                  <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
-                    <project.diagram />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          )}
         </div>
+      </div>
+
+      {project.diagram && (
+        <AnimatePresence initial={false}>
+          {showDiagram && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.35, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="mt-10 rounded-2xl border border-border bg-surface p-6 md:p-10">
+                <project.diagram />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
       </div>
     </section>
   )
