@@ -58,13 +58,69 @@ export const certifications = [
   { name: 'Deloitte Data Analytics Job Simulation', status: 'Completed' },
 ]
 
+import {
+  FiBarChart2,
+  FiCloud,
+  FiCpu,
+  FiCrosshair,
+  FiDatabase,
+  FiGitBranch,
+  FiGrid,
+  FiHash,
+  FiLayers,
+  FiMonitor,
+  FiPieChart,
+  FiSearch,
+  FiTarget,
+  FiTrendingUp,
+} from 'react-icons/fi'
+import { SiGithubactions, SiN8N, SiPython, SiScikitlearn, SiSnowflake, SiStreamlit, SiTerraform } from 'react-icons/si'
+
 export const skillGroups = [
-  { label: 'Languages', items: ['SQL', 'Python (Pandas, NumPy)'] },
+  {
+    label: 'Languages',
+    items: [
+      { name: 'SQL', icon: FiDatabase },
+      { name: 'Python (Pandas, NumPy)', icon: SiPython },
+    ],
+  },
   {
     label: 'Data Analytics & ML',
-    items: ['Exploratory Data Analysis', 'Statistical Analysis', 'Scikit-learn', 'Random Forest', 'K-Means', 'Root Cause Analysis'],
+    items: [
+      { name: 'Exploratory Data Analysis', icon: FiSearch },
+      { name: 'Statistical Analysis', icon: FiBarChart2 },
+      { name: 'Scikit-learn', icon: SiScikitlearn },
+      { name: 'Random Forest', icon: FiGitBranch },
+      { name: 'K-Means', icon: FiTarget },
+      { name: 'Root Cause Analysis', icon: FiCrosshair },
+    ],
   },
-  { label: 'Visualization', items: ['Tableau', 'Power BI', 'DAX', 'Streamlit', 'Excel', 'PowerPoint'] },
-  { label: 'Data Engineering, Cloud & Warehousing', items: ['Snowflake', 'AWS (S3, Glue, Athena)', 'dbt', 'Terraform'] },
-  { label: 'AI & Automation', items: ['Claude Code (Agentic Workflows)', 'n8n', 'Git/GitHub Actions (CI/CD)'] },
+  {
+    label: 'Visualization',
+    items: [
+      { name: 'Tableau', icon: FiPieChart },
+      { name: 'Power BI', icon: FiTrendingUp },
+      { name: 'DAX', icon: FiHash },
+      { name: 'Streamlit', icon: SiStreamlit },
+      { name: 'Excel', icon: FiGrid },
+      { name: 'PowerPoint', icon: FiMonitor },
+    ],
+  },
+  {
+    label: 'Data Engineering, Cloud & Warehousing',
+    items: [
+      { name: 'Snowflake', icon: SiSnowflake },
+      { name: 'AWS (S3, Glue, Athena)', icon: FiCloud },
+      { name: 'dbt', icon: FiLayers },
+      { name: 'Terraform', icon: SiTerraform },
+    ],
+  },
+  {
+    label: 'AI & Automation',
+    items: [
+      { name: 'Claude Code (Agentic Workflows)', icon: FiCpu },
+      { name: 'n8n', icon: SiN8N },
+      { name: 'Git/GitHub Actions (CI/CD)', icon: SiGithubactions },
+    ],
+  },
 ]
