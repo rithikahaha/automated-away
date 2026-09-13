@@ -7,13 +7,13 @@ const fadeUp = {
 
 export default function About() {
   return (
-    <section id="about" className="mx-auto max-w-3xl px-6 py-28">
+    <section id="about" className="mx-auto max-w-3xl px-6 py-24 md:py-36">
       <motion.p
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.4 }}
         variants={fadeUp}
-        className="mb-3 font-mono text-sm text-accent"
+        className="mb-4 font-mono text-sm text-accent"
       >
         01 · about
       </motion.p>
@@ -23,7 +23,7 @@ export default function About() {
         whileInView="show"
         viewport={{ once: true, amount: 0.3 }}
         variants={{ show: { transition: { staggerChildren: 0.12 } } }}
-        className="space-y-5 text-lg leading-relaxed text-muted"
+        className="space-y-6 text-xl leading-relaxed text-muted"
       >
         <motion.p variants={fadeUp}>
           Data analyst who got tired of dashboards that just sit there, so I

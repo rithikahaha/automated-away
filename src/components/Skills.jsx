@@ -8,13 +8,13 @@ const fadeUp = {
 
 export default function Skills() {
   return (
-    <section id="skills" className="mx-auto max-w-3xl px-6 py-28">
+    <section id="skills" className="mx-auto max-w-3xl px-6 py-24 md:py-36">
       <motion.p
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.6 }}
-        className="mb-3 font-mono text-sm text-accent"
+        className="mb-4 font-mono text-sm text-accent"
       >
         04 · skills
       </motion.p>
@@ -24,7 +24,7 @@ export default function Skills() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.6, delay: 0.05 }}
-        className="mb-12 font-display text-3xl font-semibold text-text sm:text-4xl"
+        className="mb-14 font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl"
       >
         What I work with
       </motion.h2>

@@ -1,133 +1,168 @@
 import { useRef, useState } from 'react'
-import { AnimatePresence, motion, useMotionTemplate, useMotionValue, useSpring } from 'framer-motion'
+import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
 import { FiArrowUpRight, FiChevronDown, FiEdit3, FiGithub } from 'react-icons/fi'
 
 export default function ProjectCard({ project, index }) {
   const [showDiagram, setShowDiagram] = useState(false)
-  const ref = useRef(null)
-  const rotateX = useSpring(0, { stiffness: 300, damping: 25 })
-  const rotateY = useSpring(0, { stiffness: 300, damping: 25 })
-  const glowX = useMotionValue(50)
-  const glowY = useMotionValue(50)
-  const glow = useMotionTemplate`radial-gradient(400px circle at ${glowX}% ${glowY}%, rgba(167,139,250,0.12), transparent 70%)`
+  const sectionRef = useRef(null)
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+  const imageY = useTransform(scrollYProgress, [0, 1], ['-6%', '6%'])
+  const imageScale = useTransform(scrollYProgress, [0, 0.5, 1], [0.94, 1, 0.94])
 
-  function handleMouseMove(e) {
-    const rect = ref.current.getBoundingClientRect()
-    const px = (e.clientX - rect.left) / rect.width
-    const py = (e.clientY - rect.top) / rect.height
-    rotateY.set((px - 0.5) * 10)
-    rotateX.set((0.5 - py) * 10)
-    glowX.set(px * 100)
-    glowY.set(py * 100)
-  }
-
-  function handleMouseLeave() {
-    rotateX.set(0)
-    rotateY.set(0)
-  }
+  const reversed = index % 2 === 1
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 32 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6, delay: index * 0.08 }}
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ rotateX, rotateY, transformPerspective: 800 }}
-      className="group relative overflow-hidden rounded-2xl border border-border bg-surface"
-    >
-      <motion.div
-        style={{ background: glow }}
-        className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-      />
+    <section ref={sectionRef} className="py-20 md:py-32">
+      <div
+        className={`mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 md:gap-16 ${
+          reversed ? 'md:flex-row-reverse' : 'md:flex-row'
+        }`}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          className="relative w-full overflow-hidden rounded-3xl border border-border bg-surface md:w-1/2"
+        >
+          <div className="relative aspect-[4/3] overflow-hidden">
+            <motion.img
+              style={{ y: imageY, scale: imageScale }}
+              src={project.image}
+              alt={`${project.title} preview`}
+              className="h-full w-full object-cover"
+            />
+          </div>
+        </motion.div>
 
-      <div className="relative aspect-[16/10] overflow-hidden border-b border-border bg-bg">
-        <img
-          src={project.image}
-          alt={`${project.title} preview`}
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent" />
-      </div>
-
-      <div className="relative z-20 p-6">
-        <h3 className="font-display text-xl font-semibold text-text">{project.title}</h3>
-        <p className="mt-3 text-sm leading-relaxed text-muted">{project.blurb}</p>
-        <p className="mt-3 text-sm leading-relaxed text-muted/70">{project.detail}</p>
-
-        <div className="mt-5 flex flex-wrap gap-2">
-          {project.tags.map((t) => (
-            <span
-              key={t}
-              className="rounded-full border border-border bg-bg px-2.5 py-1 font-mono text-[11px] text-muted"
-            >
-              {t}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-6 flex flex-wrap items-center gap-5 font-mono text-sm">
-          <a
-            href={project.github}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-1.5 text-muted transition-colors hover:text-accent"
+        <div className="w-full md:w-1/2">
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.5 }}
+            className="mb-4 font-mono text-sm text-accent"
           >
-            <FiGithub size={15} /> Code
-          </a>
-          {project.demo && (
+            Project {String(index + 1).padStart(2, '0')}
+          </motion.p>
+
+          <motion.h3
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.05 }}
+            className="text-balance font-display text-4xl font-semibold leading-[1.05] tracking-tight text-text sm:text-5xl"
+          >
+            {project.title}
+          </motion.h3>
+
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="mt-6 text-lg leading-relaxed text-muted"
+          >
+            {project.blurb}
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className="mt-4 text-base leading-relaxed text-muted/70"
+          >
+            {project.detail}
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="mt-6 flex flex-wrap gap-2"
+          >
+            {project.tags.map((t) => (
+              <span
+                key={t}
+                className="rounded-full border border-border bg-surface px-3.5 py-1.5 font-mono text-xs text-muted"
+              >
+                {t}
+              </span>
+            ))}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.5 }}
+            transition={{ duration: 0.6, delay: 0.25 }}
+            className="mt-8 flex flex-wrap items-center gap-3"
+          >
             <a
-              href={project.demo}
+              href={project.github}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 text-muted transition-colors hover:text-accent"
+              className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
             >
-              <FiArrowUpRight size={15} /> {project.demoLabel || 'Live'}
+              <FiGithub size={16} /> Code
             </a>
-          )}
-          {project.blog && (
-            <a
-              href={project.blog}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 text-muted transition-colors hover:text-accent"
-            >
-              <FiEdit3 size={15} /> Blog
-            </a>
-          )}
+            {project.demo && (
+              <a
+                href={project.demo}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-bg transition-transform hover:scale-105"
+              >
+                <FiArrowUpRight size={16} /> {project.demoLabel || 'Live'}
+              </a>
+            )}
+            {project.blog && (
+              <a
+                href={project.blog}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+              >
+                <FiEdit3 size={16} /> Blog
+              </a>
+            )}
+            {project.diagram && (
+              <button
+                onClick={() => setShowDiagram((v) => !v)}
+                className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+              >
+                How it works
+                <motion.span animate={{ rotate: showDiagram ? 180 : 0 }} transition={{ duration: 0.25 }}>
+                  <FiChevronDown size={14} />
+                </motion.span>
+              </button>
+            )}
+          </motion.div>
+
           {project.diagram && (
-            <button
-              onClick={() => setShowDiagram((v) => !v)}
-              className="flex items-center gap-1.5 text-muted transition-colors hover:text-accent"
-            >
-              How it works
-              <motion.span animate={{ rotate: showDiagram ? 180 : 0 }} transition={{ duration: 0.25 }}>
-                <FiChevronDown size={14} />
-              </motion.span>
-            </button>
+            <AnimatePresence initial={false}>
+              {showDiagram && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-6 rounded-2xl border border-border bg-surface p-5">
+                    <project.diagram />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           )}
         </div>
-
-        {project.diagram && (
-          <AnimatePresence initial={false}>
-            {showDiagram && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className="overflow-hidden"
-              >
-                <div className="mt-5 rounded-xl border border-border bg-bg p-4">
-                  <project.diagram />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
       </div>
-    </motion.div>
+    </section>
   )
 }

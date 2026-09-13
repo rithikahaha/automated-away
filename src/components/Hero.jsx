@@ -30,7 +30,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.1 }}
-        className="font-display text-5xl font-semibold text-text sm:text-7xl"
+        className="text-balance font-display text-6xl font-semibold tracking-tight text-text sm:text-7xl md:text-8xl"
       >
         Rithika Harikrishna
       </motion.h1>
@@ -39,7 +39,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.2 }}
-        className="mt-5 flex h-8 items-center font-mono text-lg text-muted sm:text-xl"
+        className="mt-7 flex h-9 items-center font-mono text-xl text-muted sm:text-2xl"
       >
         <span>I&apos;m a&nbsp;</span>
         <AnimatePresence mode="wait">
@@ -60,7 +60,7 @@ export default function Hero() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.3 }}
-        className="mt-6 max-w-lg text-balance text-muted"
+        className="mt-7 max-w-xl text-balance text-lg text-muted sm:text-xl"
       >
         I turn messy data into things that actually answer questions —
         and lately, into agents that do it for me.
@@ -70,17 +70,17 @@ export default function Hero() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.4 }}
-        className="mt-9 flex flex-wrap items-center justify-center gap-3"
+        className="mt-10 flex flex-wrap items-center justify-center gap-4"
       >
         <a
           href="#projects"
-          className="rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-bg transition-transform hover:scale-105"
+          className="rounded-full bg-accent px-8 py-3.5 text-base font-medium text-bg transition-transform hover:scale-105"
         >
           View projects
         </a>
         <a
           href="#contact"
-          className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+          className="rounded-full border border-border px-8 py-3.5 text-base font-medium text-text transition-colors hover:border-accent hover:text-accent"
         >
           Get in touch
         </a>
@@ -88,7 +88,7 @@ export default function Hero() {
           href="/resume.pdf"
           target="_blank"
           rel="noreferrer"
-          className="rounded-full border border-border px-6 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+          className="rounded-full border border-border px-8 py-3.5 text-base font-medium text-text transition-colors hover:border-accent hover:text-accent"
         >
           Resume
         </a>

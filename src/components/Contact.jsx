@@ -24,13 +24,13 @@ const links = [
 
 export default function Contact() {
   return (
-    <section id="contact" className="mx-auto max-w-3xl px-6 py-28 text-center">
+    <section id="contact" className="mx-auto max-w-3xl px-6 py-24 md:py-36 text-center">
       <motion.p
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.6 }}
-        className="mb-3 font-mono text-sm text-accent"
+        className="mb-4 font-mono text-sm text-accent"
       >
         05 · contact
       </motion.p>
@@ -40,7 +40,7 @@ export default function Contact() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.6, delay: 0.05 }}
-        className="font-display text-3xl font-semibold text-text sm:text-4xl"
+        className="font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl md:text-6xl"
       >
         Let&apos;s talk
       </motion.h2>
@@ -50,7 +50,7 @@ export default function Contact() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.4 }}
         transition={{ duration: 0.6, delay: 0.1 }}
-        className="mx-auto mt-4 max-w-md text-muted"
+        className="mx-auto mt-5 max-w-md text-lg text-muted"
       >
         Have a project, a role, or an interesting data problem? My inbox is open.
       </motion.p>
