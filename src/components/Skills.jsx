@@ -29,7 +29,7 @@ export default function Skills() {
         transition={{ duration: 0.6 }}
         className="mb-4 font-mono text-sm text-accent"
       >
-        04 · skills
+        05 · skills
       </motion.p>
 
       <motion.h2
