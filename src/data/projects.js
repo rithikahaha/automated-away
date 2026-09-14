@@ -45,6 +45,6 @@ export const projects = [
     demo: 'https://rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline/dashboard/',
     demoLabel: 'Live dashboard',
     diagram: RevenueFlow,
-    blog: null,
+    blog: 'https://medium.com/@rrithikaaa.h/only-3-12-of-customers-ever-buy-again-what-a-cohort-analysis-actually-found-712558de8e48',
   },
 ]
