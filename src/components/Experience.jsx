@@ -17,11 +17,8 @@ function ExperienceRow({ job, index }) {
         <span className="absolute left-5 top-10 h-[calc(100%-1.5rem)] w-px bg-border" />
       )}
 
-      <span
-        style={{ background: job.color }}
-        className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full font-display text-sm font-semibold text-white"
-      >
-        {job.initial}
+      <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-white p-2 shadow-md ring-1 ring-border">
+        <img src={job.logo} alt={`${job.client || job.company} logo`} className="h-full w-full object-contain" />
       </span>
 
       <button
