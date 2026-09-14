@@ -12,14 +12,19 @@ function ExperienceRow({ job, index }) {
   const [open, setOpen] = useState(false)
 
   return (
-    <motion.div variants={fadeUp} transition={{ delay: index * 0.05 }} className="relative pb-8 pl-14">
+    <motion.div variants={fadeUp} transition={{ delay: index * 0.05 }} className="relative pb-8 pl-20">
       {index !== experience.length - 1 && (
-        <span className="absolute left-5 top-10 h-[calc(100%-1.5rem)] w-px bg-border" />
+        <span className="absolute left-7 top-16 h-[calc(100%-2rem)] w-px bg-border" />
       )}
 
-      <span className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-full bg-white p-2 shadow-md ring-1 ring-border">
-        <img src={job.logo} alt={`${job.client || job.company} logo`} className="h-full w-full object-contain" />
+      <span className="absolute left-0 top-0 flex h-14 w-14 items-center justify-center rounded-full bg-white p-2.5 shadow-md ring-1 ring-border">
+        <img src={job.logo} alt={`${job.company} logo`} className="h-full w-full object-contain" />
       </span>
+      {job.clientLogo && (
+        <span className="absolute left-9 top-9 flex h-7 w-7 items-center justify-center rounded-full bg-white p-1 shadow-md ring-2 ring-bg">
+          <img src={job.clientLogo} alt={`${job.client} logo`} className="h-full w-full object-contain" />
+        </span>
+      )}
 
       <button
         onClick={() => setOpen((v) => !v)}

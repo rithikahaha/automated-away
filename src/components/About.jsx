@@ -31,7 +31,7 @@ export default function About() {
         </motion.p>
         <motion.p variants={fadeUp}>
           I&apos;ve spent the last while turning messy warehouses, spreadsheets,
-          and BI files into things that actually answer questions — supply
+          and BI files into things that actually answer questions: supply
           chains, credit risk, customer revenue. Most recently: teaching a
           team of AI agents to do the analysis instead of me. It&apos;s going
           well. Mostly.

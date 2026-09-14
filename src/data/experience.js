@@ -22,7 +22,8 @@ export const experience = [
   {
     company: 'Extern',
     client: 'Wayfair',
-    logo: `${base}logos/wayfair.svg`,
+    logo: `${base}logos/extern.svg`,
+    clientLogo: `${base}logos/wayfair.svg`,
     role: 'AI Agent Engineering & BI Extern',
     period: 'Apr 2026 - Sep 2026',
     tagline:
@@ -36,7 +37,8 @@ export const experience = [
   {
     company: 'Extern',
     client: 'Amazon',
-    logo: `${base}logos/amazon.svg`,
+    logo: `${base}logos/extern.svg`,
+    clientLogo: `${base}logos/amazon.svg`,
     role: 'Operational Strategy & People Analytics Extern',
     period: 'Jan 2026 - Apr 2026',
     tagline:
@@ -57,7 +59,7 @@ export const experience = [
       'Cut my teeth on SQL and database design, then spent evenings making the trainee cohort feel less alone.',
     bullets: [
       'Executed 100+ SQL queries (joins, subqueries, aggregations) and practiced relational database design (normalization, indexing, schema design).',
-      'Piloted a daily 1-hour peer storytelling session for 10-15 trainees — turned out onboarding stress needed a place to go, not just a manual.',
+      'Piloted a daily 1-hour peer storytelling session for 10-15 trainees, since onboarding stress turned out to need a place to go, not just a manual.',
     ],
     tags: ['SQL', 'Database Design'],
   },
@@ -67,7 +69,7 @@ export const education = {
   school: 'Marian Engineering College',
   degree: 'B.Tech, Computer Science Engineering',
   location: 'Thiruvananthapuram, Kerala',
-  period: '2021 – 2025',
+  period: '2021 - 2025',
 }
 
 export const certifications = [
