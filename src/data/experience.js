@@ -42,13 +42,12 @@ export const experience = [
     role: 'Operational Strategy & People Analytics Extern',
     period: 'Jan 2026 - Apr 2026',
     tagline:
-      'Externed with Amazon, digging through a thousand-plus feedback records to find where employee experience was actually breaking, not where everyone assumed it was.',
+      'Externed with Amazon, digging through Glassdoor reviews and YouTube clips to find the specific broken system driving warehouse worker dissatisfaction, then fixing it instead of just reporting it.',
     bullets: [
-      'Analyzed 1,000+ feedback records for sentiment trends across 14 workforce metrics (Python, Pandas, NLTK, VADER), uncovering where employee experience was breaking down across 3 operational teams.',
-      'Automated data cleaning and validation workflows via Python scripting, cutting manual data-quality checks from 3 hours to under 45 minutes per cycle.',
-      'Delivered 3 executive-ready reports translating raw findings into actionable recommendations, shaping near-term stakeholder priorities and workforce planning.',
+      'Engineered a Python (NLTK, TextBlob) sentiment pipeline across 140+ Glassdoor reviews and YouTube clips, tagging 3 core themes and exposing a rate-feedback system that punished warehouse workers for delays outside their control, driving a 25% negative-sentiment segment.',
+      'Restructured the flawed feedback system into a 2-week, 1-zone pilot with same-day tracking metrics after applying 5-Whys root cause analysis, then pitched the fix to leadership in a 5-slide business case.',
     ],
-    tags: ['Python', 'NLTK', 'Sentiment Analysis'],
+    tags: ['Python', 'NLTK', 'Root Cause Analysis'],
   },
   {
     company: 'Infosys Limited',
