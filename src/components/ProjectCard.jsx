@@ -16,6 +16,12 @@ import {
 import LaptopMockup from './LaptopMockup'
 import NotificationCard from './NotificationCard'
 import TableauEmbed from './TableauEmbed'
+import DashboardEmbed from './DashboardEmbed'
+
+const embedButtonLabel = {
+  tableau: 'Try it live',
+  iframe: 'Explore the dashboard',
+}
 
 const notificationsByIndex = [
   [
@@ -162,7 +168,7 @@ export default function ProjectCard({ project, index }) {
                 onClick={() => setShowEmbed((v) => !v)}
                 className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
               >
-                <FiPlayCircle size={16} /> {showEmbed ? 'Hide live demo' : 'Try it live'}
+                <FiPlayCircle size={16} /> {showEmbed ? 'Hide live demo' : embedButtonLabel[project.embedType] || 'Try it live'}
               </button>
             )}
             {project.blog && (
@@ -201,7 +207,11 @@ export default function ProjectCard({ project, index }) {
               className="overflow-hidden"
             >
               <div className="mt-10">
-                <TableauEmbed src={project.embedUrl} />
+                {project.embedType === 'iframe' ? (
+                  <DashboardEmbed src={project.embedUrl} />
+                ) : (
+                  <TableauEmbed src={project.embedUrl} />
+                )}
               </div>
             </motion.div>
           )}
