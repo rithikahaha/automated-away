@@ -62,8 +62,8 @@ export default function Hero() {
         transition={{ duration: 0.7, delay: 0.3 }}
         className="mt-7 max-w-xl text-balance text-lg text-muted sm:text-xl"
       >
-        I turn messy data into things that actually answer questions,
-        and lately, into agents that do it for me.
+        I turn &quot;can you check this real quick&quot; into an actual
+        answer, and lately, into agents that do it for me.
       </motion.p>
 
       <motion.div
