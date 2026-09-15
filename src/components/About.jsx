@@ -40,6 +40,19 @@ export default function About() {
           data analytics and AI, together, which is what I actually build now.
         </motion.p>
         <motion.p variants={fadeUp}>
+          I didn&apos;t have a data background going in, I had a systems
+          engineering one. So I taught myself the domain end to end: SQL past
+          what Infosys gave me, Python&apos;s data stack, the statistics that
+          make a result actually mean something instead of just looking like
+          one, PySpark and cloud warehousing for when data gets big, Tableau
+          and Power BI for saying it out loud, and now agentic AI for the
+          newest layer of it. The Google Data Analytics certificate and
+          Deloitte&apos;s job simulation gave me some structure, but most of
+          it came from building the three real projects on this site and
+          hitting the actual gaps in my knowledge in whatever order the
+          project demanded, not the order a syllabus would have picked.
+        </motion.p>
+        <motion.p variants={fadeUp}>
           I&apos;ve spent the last while turning messy warehouses, spreadsheets,
           and BI files into things that actually answer questions: supply
           chains, credit risk, customer revenue. Most recently: teaching a
