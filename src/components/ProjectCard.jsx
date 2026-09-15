@@ -163,14 +163,6 @@ export default function ProjectCard({ project, index }) {
                 <FiArrowUpRight size={16} /> {project.demoLabel || 'Live'}
               </a>
             )}
-            {project.embedUrl && (
-              <button
-                onClick={() => setShowEmbed((v) => !v)}
-                className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
-              >
-                <FiPlayCircle size={16} /> {showEmbed ? 'Hide live demo' : embedButtonLabel[project.embedType] || 'Try it live'}
-              </button>
-            )}
             {project.blog && (
               <a
                 href={project.blog}
@@ -192,9 +184,35 @@ export default function ProjectCard({ project, index }) {
                 </motion.span>
               </button>
             )}
+            {project.embedUrl && (
+              <button
+                onClick={() => setShowEmbed((v) => !v)}
+                className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+              >
+                <FiPlayCircle size={16} /> {showEmbed ? 'Hide live demo' : embedButtonLabel[project.embedType] || 'Try it live'}
+              </button>
+            )}
           </motion.div>
         </div>
       </div>
+
+      {project.diagram && (
+        <AnimatePresence initial={false}>
+          {showDiagram && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.35, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="mt-10 rounded-2xl border border-border bg-surface p-6 md:p-10">
+                <project.diagram />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {project.embedUrl && (
         <AnimatePresence initial={false}>
@@ -212,24 +230,6 @@ export default function ProjectCard({ project, index }) {
                 ) : (
                   <TableauEmbed src={project.embedUrl} />
                 )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      )}
-
-      {project.diagram && (
-        <AnimatePresence initial={false}>
-          {showDiagram && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.35, ease: 'easeInOut' }}
-              className="overflow-hidden"
-            >
-              <div className="mt-10 rounded-2xl border border-border bg-surface p-6 md:p-10">
-                <project.diagram />
               </div>
             </motion.div>
           )}
