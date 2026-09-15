@@ -36,8 +36,8 @@ export default function About() {
         variants={{ show: { transition: { staggerChildren: 0.12 } } }}
       >
         <motion.p variants={fadeUp} className="text-2xl font-medium leading-snug text-text sm:text-3xl">
-          Data analyst who got tired of dashboards that just sit there, so I
-          started building ones that talk back.
+          I&apos;m the person who automates the part of the job everyone else
+          just complains about.
         </motion.p>
 
         <div className="mt-12 grid gap-8 sm:grid-cols-2">
