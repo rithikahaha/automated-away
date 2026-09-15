@@ -12,7 +12,7 @@ const blocks = [
   },
   {
     label: 'how i got here',
-    text: 'No data background, no bootcamp. I taught myself SQL, Python, stats, PySpark, Tableau, and now agentic AI by building the three real projects on this site and closing whatever gap each one exposed.',
+    text: 'Engineering background, not a data one, and no bootcamp. I taught myself SQL, Python, stats, PySpark, Tableau, and now agentic AI by building the three real projects on this site and closing whatever gap each one exposed.',
   },
 ]
 
