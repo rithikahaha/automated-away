@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://rithikahaha.github.io/automated-away/sitemap.xml

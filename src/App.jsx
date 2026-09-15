@@ -1,6 +1,7 @@
 import BackgroundGlow from './components/BackgroundGlow'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
+import ImpactStrip from './components/ImpactStrip'
 import About from './components/About'
 import Experience from './components/Experience'
 import Projects from './components/Projects'
@@ -16,6 +17,7 @@ export default function App() {
       <Nav />
       <main>
         <Hero />
+        <ImpactStrip />
         <About />
         <Experience />
         <Projects />
