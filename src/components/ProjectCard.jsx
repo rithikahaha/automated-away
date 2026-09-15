@@ -7,6 +7,7 @@ import {
   FiChevronDown,
   FiEdit3,
   FiGithub,
+  FiPlayCircle,
   FiShoppingBag,
   FiTrendingUp,
   FiTruck,
@@ -14,6 +15,7 @@ import {
 } from 'react-icons/fi'
 import LaptopMockup from './LaptopMockup'
 import NotificationCard from './NotificationCard'
+import TableauEmbed from './TableauEmbed'
 
 const notificationsByIndex = [
   [
@@ -32,6 +34,7 @@ const notificationsByIndex = [
 
 export default function ProjectCard({ project, index }) {
   const [showDiagram, setShowDiagram] = useState(false)
+  const [showEmbed, setShowEmbed] = useState(false)
   const sectionRef = useRef(null)
   const { scrollYProgress } = useScroll({
     target: sectionRef,
@@ -154,6 +157,14 @@ export default function ProjectCard({ project, index }) {
                 <FiArrowUpRight size={16} /> {project.demoLabel || 'Live'}
               </a>
             )}
+            {project.embedUrl && (
+              <button
+                onClick={() => setShowEmbed((v) => !v)}
+                className="flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-text transition-colors hover:border-accent hover:text-accent"
+              >
+                <FiPlayCircle size={16} /> {showEmbed ? 'Hide live demo' : 'Try it live'}
+              </button>
+            )}
             {project.blog && (
               <a
                 href={project.blog}
@@ -178,6 +189,24 @@ export default function ProjectCard({ project, index }) {
           </motion.div>
         </div>
       </div>
+
+      {project.embedUrl && (
+        <AnimatePresence initial={false}>
+          {showEmbed && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.35, ease: 'easeInOut' }}
+              className="overflow-hidden"
+            >
+              <div className="mt-10">
+                <TableauEmbed src={project.embedUrl} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
 
       {project.diagram && (
         <AnimatePresence initial={false}>

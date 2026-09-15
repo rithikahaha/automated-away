@@ -30,6 +30,7 @@ export const projects = [
     github: 'https://github.com/rithikahaha/Supply-Chain-Audit',
     demo: 'https://public.tableau.com/app/profile/rithika.h8756/viz/SupplyChainSLAAudit/SupplyChainSLAAudit',
     demoLabel: 'Tableau Public',
+    embedUrl: 'https://public.tableau.com/views/SupplyChainSLAAudit/SupplyChainSLAAudit',
     diagram: SupplyChainFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-audited-180-519-orders-and-found-a-promise-that-was-broken-100-of-the-time-6632b2cdd82b',
   },
