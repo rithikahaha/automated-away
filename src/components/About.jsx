@@ -30,6 +30,16 @@ export default function About() {
           started building ones that talk back.
         </motion.p>
         <motion.p variants={fadeUp}>
+          I started my career as a systems engineer, but traditional
+          engineering, the kind built on writing code, never felt like mine.
+          What did feel like mine showed up at Infosys, and it showed up as
+          two things at once: SQL, specifically, not &quot;data&quot; in
+          general, and everything happening in AI right now, the automation,
+          the agents. Both landed the same way, at the same time. So the
+          pivot wasn&apos;t from one thing into another, it was toward both:
+          data analytics and AI, together, which is what I actually build now.
+        </motion.p>
+        <motion.p variants={fadeUp}>
           I&apos;ve spent the last while turning messy warehouses, spreadsheets,
           and BI files into things that actually answer questions: supply
           chains, credit risk, customer revenue. Most recently: teaching a
