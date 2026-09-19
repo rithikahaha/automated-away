@@ -328,6 +328,34 @@ Integration-adopting accounts churned at 17.5% versus 27.1% for non-adopters, a 
 - Deployment plans exist for AWS, GCP, and Azure (Terraform, a way of writing infrastructure as code), explicitly illustrative and never applied to a real cloud account
 - Every agent talks to the warehouse through one connection string, so pointing this at a real Postgres or Snowflake warehouse instead of the local sample is a config change, not a rewrite
 
+## Keeping it running: the reliability layer
+
+An analytics tool people rely on has to stay up and stay correct, not just give a good answer once. I was new to DevOps (the work of building, deploying and running software reliably) when I added this, so I built it as a way to learn it.
+
+```python
+def run_query(sql):
+    if not _ALLOWED_STATEMENT.match(sql):
+        _log_query(sql, "blocked", 0.0)
+        raise ValueError("Only read-only queries are allowed.")
+    started = time.perf_counter()
+    df = pd.read_sql(text(sql), conn)
+    _log_query(sql, "ok", (time.perf_counter() - started) * 1000, rows=len(df))
+    return df
+```
+
+- Every query now writes one line to a log: when it ran, whether it worked, how long it took. That log is the only source for any reliability number I quote, so I never state an uptime I did not measure
+- Two targets are set against it (called SLOs, service level objectives): 99.5% of queries succeed, and the slowest 5% still finish in under a second
+- I track the 95th percentile (p95) of speed instead of the average, because an average hides the slow queries a real user actually waits on. A test in the repo shows a case where the average looks fine and p95 fails
+- A separate health check returns a plain pass or fail, so the automated pipeline and a container scheduler can act on it without reading text
+- The dashboard runs in a container (a sealed box that runs the same on any machine), as a non-root user with a read-only filesystem. The pipeline builds it, runs the health check inside it, starts it, and waits for it to answer before anything counts as shippable
+
+**The near miss.** Before deploying, I checked what a fresh copy of the repo actually contains, instead of what my own folder contains. The database and the trained model are generated files kept out of git, so they existed on my machine and would not exist on the host. The dashboard would have crashed on its first page load. I fixed it, then made the pipeline build from a clean copy so it cannot happen quietly again. I wrote it up as a short blameless postmortem, with a runbook for each failure I would expect.
+
+- Nothing was down and no user was affected, which is the point: the check caught it first
+- Test the path a deploy takes, not just the code. Anything gitignored is a dependency someone has to create
+
+**What is real and what is not.** The container, health check, SLO calculation and pipeline job are built and tested (the test suite is now 48 tests). The Kubernetes and Terraform files are written but have never been run on a real cluster or cloud account, and I say so whenever asked.
+
 ## Is any of this data real?
 
 No, and I say that upfront. Every organization, user, and event in this dataset is synthetically generated with fixed random seeds, for reproducibility. The 75.6% WAU growth, the 108.5% net revenue retention, none of these are a real company's numbers. What this demonstrates isn't "I found a real insight," it's "I can build the system that would find one," the agents, the pipeline, the tests, the model, all real and running end to end, which is the more relevant claim for the roles I'm applying to.
