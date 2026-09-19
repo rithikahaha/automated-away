@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiArrowDown, FiGithub, FiLinkedin, FiMail } from 'react-icons/fi'
 
-const roles = ['data analyst', 'agent builder', 'problem automator']
+const roles = ['data analyst', 'business analyst', 'agent builder', 'problem automator']
 
 export default function Hero() {
   const [i, setI] = useState(0)
