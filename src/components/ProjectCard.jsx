@@ -121,6 +121,19 @@ export default function ProjectCard({ project, index }) {
             {project.blurb}
           </motion.p>
 
+          {project.recommendation && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.15 }}
+              className="mt-6 rounded-xl border border-border bg-surface px-5 py-4"
+            >
+              <p className="mb-1.5 font-mono text-xs uppercase tracking-wide text-accent">so what</p>
+              <p className="text-base leading-relaxed text-text">{project.recommendation}</p>
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

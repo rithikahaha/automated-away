@@ -16,6 +16,8 @@ export const projects = [
     github: 'https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code',
     demo: 'https://ai-data-analyst-claude-code.streamlit.app/',
     demoLabel: 'Live dashboard',
+    recommendation:
+      'Put customer-success outreach on the Starter accounts the churn model scores highest, and run a real experiment on integration adoption before rolling it out.',
     diagram: AgentFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-gave-a-team-of-ai-agents-my-job-for-a-week-heres-where-i-caught-them-lying-7fe834a5f497',
   },
@@ -32,6 +34,8 @@ export const projects = [
     demoLabel: 'Tableau Public',
     embedUrl: 'https://public.tableau.com/views/SupplyChainSLAAudit/SupplyChainSLAAudit',
     embedType: 'tableau',
+    recommendation:
+      'Reset the First Class promise from 1 day to 2 and Second Class from 2 to 4, and leave Standard alone. Fix operations, not account management: the failure is the same across every spend tier.',
     diagram: SupplyChainFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-audited-180-519-orders-and-found-a-promise-that-was-broken-100-of-the-time-6632b2cdd82b',
   },
@@ -48,6 +52,8 @@ export const projects = [
     demoLabel: 'Live dashboard',
     embedUrl: 'https://rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline/dashboard/',
     embedType: 'iframe',
+    recommendation:
+      'Aim retention at turning first-time buyers into second-time buyers, and fix delivery reliability first, since late delivery is the strongest signal of a bad review.',
     diagram: RevenueFlow,
     blog: 'https://medium.com/@rrithikaaa.h/only-3-12-of-customers-ever-buy-again-what-a-cohort-analysis-actually-found-712558de8e48',
   },
