@@ -1,3 +1,4 @@
+import { MotionConfig } from 'framer-motion'
 import BackgroundGlow from './components/BackgroundGlow'
 import Nav from './components/Nav'
 import Hero from './components/Hero'
@@ -12,6 +13,7 @@ import Footer from './components/Footer'
 
 export default function App() {
   return (
+    <MotionConfig reducedMotion="user">
     <div className="relative min-h-screen">
       <BackgroundGlow />
       <Nav />
@@ -27,5 +29,6 @@ export default function App() {
       </main>
       <Footer />
     </div>
+    </MotionConfig>
   )
 }
