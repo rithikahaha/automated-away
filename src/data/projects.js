@@ -17,7 +17,7 @@ export const projects = [
     demo: 'https://ai-data-analyst-claude-code.streamlit.app/',
     demoLabel: 'Live dashboard',
     recommendation:
-      'In this sample company, customers on the cheapest plan cancel more than four times as often as those on the top plan (28.8% versus 6.7%). So the customer-success team should reach out first to the accounts the model rates most likely to cancel. One promising pattern, that customers who connect other tools stay longer, is not proven yet, so test it on a small group before changing anything.',
+      'In this sample data, the cheapest plan loses customers over four times as fast as the top plan. Call the customers most likely to leave first.',
     diagram: AgentFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-gave-a-team-of-ai-agents-my-job-for-a-week-heres-where-i-caught-them-lying-7fe834a5f497',
   },
@@ -35,7 +35,7 @@ export const projects = [
     embedUrl: 'https://public.tableau.com/views/SupplyChainSLAAudit/SupplyChainSLAAudit',
     embedType: 'tableau',
     recommendation:
-      'Shipping promised delivery in 1 day (First Class) or 2 days (Second Class), but orders actually took about 2 and 4 days, so every First Class order arrived late. The fix is to promise 2 and 4 days instead: in a simulation that removed every First Class miss and halved the Second Class misses, and Standard shipping needs no change because it was already accurate. Late orders hit big and small spenders equally, so this is a shipping-operations problem, and a real pilot should confirm it first.',
+      'Premium shipping promised 1-day and 2-day delivery but really took about 2 and 4 days, so most premium orders were late. Promising 2 and 4 days instead would have cut the late orders sharply in a simulation.',
     diagram: SupplyChainFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-audited-180-519-orders-and-found-a-promise-that-was-broken-100-of-the-time-6632b2cdd82b',
   },
