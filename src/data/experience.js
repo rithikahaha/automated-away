@@ -1,4 +1,5 @@
 import {
+  FiActivity,
   FiBarChart2,
   FiCloud,
   FiCpu,
@@ -14,7 +15,7 @@ import {
   FiTarget,
   FiTrendingUp,
 } from 'react-icons/fi'
-import { SiGithubactions, SiN8N, SiPython, SiScikitlearn, SiSnowflake, SiStreamlit, SiTerraform } from 'react-icons/si'
+import { SiDocker, SiGithubactions, SiN8N, SiPython, SiScikitlearn, SiSnowflake, SiStreamlit, SiTerraform } from 'react-icons/si'
 
 const base = import.meta.env.BASE_URL
 
@@ -113,6 +114,8 @@ export const skillGroups = [
       { name: 'AWS (S3, Glue, Athena)', icon: FiCloud },
       { name: 'dbt', icon: FiLayers },
       { name: 'Terraform', icon: SiTerraform },
+      { name: 'Docker', icon: SiDocker },
+      { name: 'Reliability (SLIs, SLOs, runbooks)', icon: FiActivity },
     ],
   },
   {

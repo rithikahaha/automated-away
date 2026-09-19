@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion, useScroll, useTransform } from 'framer-motion'
 import {
+  FiActivity,
   FiAlertTriangle,
   FiArrowUpRight,
   FiCheckCircle,
@@ -9,7 +10,6 @@ import {
   FiGithub,
   FiPlayCircle,
   FiShoppingBag,
-  FiTrendingUp,
   FiTruck,
   FiUsers,
 } from 'react-icons/fi'
@@ -26,7 +26,7 @@ const embedButtonLabel = {
 const notificationsByIndex = [
   [
     { icon: FiAlertTriangle, title: 'Churn risk alert', value: 'Starter tier · 28.8%' },
-    { icon: FiTrendingUp, title: 'Weekly report ready', value: 'WAU up 75.6%' },
+    { icon: FiActivity, title: 'SLO check', value: 'p95 target < 1000 ms' },
   ],
   [
     { icon: FiTruck, title: 'SLA breach detected', value: 'First Class · 0% on time' },

@@ -10,9 +10,9 @@ export const projects = [
     blurb:
       'Ask a business question in plain English. A team of AI agents figures out whether it needs SQL, a stats test, or an ML model, then answers with real numbers, a chart, and honest caveats.',
     detail:
-      'Engineered a system of 7 specialized agents on Claude Code, backed by 40 automated dbt data checks and a 24-test suite that runs on every update via GitHub Actions. Built a churn model (AUC 0.6675) on 50K+ usage events, and stress-tested a "35% churn difference" that turned out not to be statistically proven (p=0.075), catching a false pattern before it drove a retention decision. Live dashboard tracks 108.5% revenue growth from existing customers; a Terraform plan sketches multi-cloud (AWS/GCP/Azure) scaling.',
+      'Engineered a system of 7 specialized agents on Claude Code, backed by 40 automated dbt data checks and a 48-test suite plus a container build and health check that run on every update via GitHub Actions. Built a churn model (AUC 0.6675) on 50K+ usage events, and stress-tested a "35% churn difference" that turned out not to be statistically proven (p=0.075), catching a false pattern before it drove a retention decision. Live dashboard tracks 108.5% revenue growth from existing customers; a reliability layer measures availability and p95 latency against stated SLOs, with runbooks and a written postmortem. The Kubernetes and Terraform files are illustrative and have never been applied.',
     image: `${base}images/ai-data-analyst.png`,
-    tags: ['Claude Code', 'Python', 'SQL', 'dbt', 'Streamlit', 'GitHub Actions'],
+    tags: ['Claude Code', 'Python', 'SQL', 'dbt', 'Streamlit', 'Docker', 'GitHub Actions'],
     github: 'https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code',
     demo: 'https://ai-data-analyst-claude-code.streamlit.app/',
     demoLabel: 'Live dashboard',

@@ -4,7 +4,7 @@
 - **The problem:** I do data analysis for a living. Someone asks a question in Slack. I spend 40 minutes writing SQL, running a test, building a chart, to answer something they typed in 5 seconds.
 - **What I built:** one analyst-driven system on Claude Code, split into 7 specialties covering the full 2026 data-analyst skillset, that takes a plain-English business question and answers it with SQL, a significance test, or a model, whichever the question actually needs, plus honest caveats when the data doesn't support a clean story.
 - **The honest part:** AI wrote most of the code here. SQL, Python, dbt models, all of it. What it didn't do is decide what was worth building, or catch it when it was wrong. This case study shows you both halves: the system, and my actual judgment calls on top of it.
-- **Proof it's not just a demo:** real example Q&As with real output, an eval framework, a 34-test pytest suite, 40 passing dbt checks, and two real bugs I caught and fixed, shown with the actual diffs.
+- **Proof it's not just a demo:** real example Q&As with real output, an eval framework, a 48-test pytest suite, 40 passing dbt checks, and two real bugs I caught and fixed, shown with the actual diffs.
 - Every code block below has a plain-English "Line by line" breakdown. No assumed syntax knowledge.
 
 ## Jump to a section
@@ -23,6 +23,7 @@
 - [Real questions, real answers](#real-questions-real-answers)
 - [Beyond one question: the rest of the job](#beyond-one-question-the-rest-of-the-job)
 - [How the agents get graded](#how-the-agents-get-graded)
+- [Keeping it running: the reliability layer](#keeping-it-running-the-reliability-layer)
 - [Bug 1: the chart that lied](#bug-1-the-chart-that-lied)
 - [Bug 2: the pattern that wasn't real](#bug-2-the-pattern-that-wasnt-real)
 - [Test suite, CI, and deployment](#test-suite-ci-and-deployment)
@@ -763,6 +764,21 @@ Every one of the "real questions, real answers" above ends in a recommendation. 
 
 This isn't an automated pass/fail test suite. It's a checklist for a human (or `ai-engineer`) to periodically re-run and compare against, the same way a real team might keep a shared doc of "questions we should always be able to answer correctly."
 
+## Keeping it running: the reliability layer
+
+I added this after the analysis side was done, because a tool people rely on has to stay up and stay correct. I was new to DevOps when I built it, so it doubles as how I learned it, and the repo has a from-scratch guide with exercises (`docs/devops-from-scratch/`).
+
+What is built and tested:
+- **Container.** A Dockerfile runs the dashboard as a non-root user with a read-only filesystem, plus a docker-compose file. CI builds the image, runs the health check inside it, starts the dashboard and waits for its health endpoint to answer.
+- **Measured reliability.** Every query through `connectors/warehouse.py` is logged as one JSON line. `reliability/sli.py` turns that log into availability and p95 latency against stated targets (99.5% availability, p95 under 1000 ms). p95 rather than the average, because an average hides the slow queries a user actually waits on, and a test shows a case where the mean looks fine and p95 breaches.
+- **Health as an exit code.** `reliability/healthcheck.py` returns 0 or 1, which is what CI and an orchestrator act on.
+- **Runbooks and a postmortem.** Four runbooks for the failures I would expect, and one blameless postmortem of a real near miss: the dashboard would have crashed on a fresh deploy because the database and model are gitignored generated files, so they existed on my machine but not in a clone. Caught by checking what a fresh clone contains, fixed, and CI now builds from a clean checkout so it cannot recur.
+- **Least privilege.** A read-only database role, the application guard, secrets kept out of git, a non-root container.
+
+What is not: the Kubernetes manifests and Terraform are written and illustrative, and have never been run on a real cluster or cloud account. I say that plainly whenever asked.
+
+**Interview angle:** the honest version is stronger than a bluff. I can explain why each piece exists, show the one that is real and tested, and name the ones that are only sketched.
+
 ## Bug 1: the chart that lied
 
 The dashboard has a funnel: signup, then onboarding, then activation. The first version rendered it as activation, funnel, signup. Alphabetical order. It looked fine, evenly spaced bars, real numbers, plausible labels. The sequence was scrambled, so the story it told was wrong.
@@ -804,7 +820,7 @@ The honest answer was "promising, not proven." Not "found it." Shipping that 35%
 
 ## Test suite, CI, and deployment
 
-34 pytest tests. A real one in full, `tests/test_warehouse.py`:
+48 pytest tests. A real one in full, `tests/test_warehouse.py`:
 
 ```python
 def test_read_only_guard_blocks_writes():
@@ -917,7 +933,7 @@ Point this at a real, messier, unowned warehouse instead of one I control. That'
 Answering one question well is maybe half of it. I also built the parts around that: `pipelines/monitor.py` runs on a schedule and checks whether the pipeline's quietly stalled or a metric has drifted, so a problem gets caught before a stakeholder asks and gets a wrong answer from it. Before I'd let anyone run an experiment, there's a feasibility check, required sample size against actual signup volume, that already caught one experiment idea in this project that would've taken over 500 weeks to reach significance on the traffic available, which is a decision to redesign it, not run it and hope. There's a changelog on the metrics glossary so a definition change is traceable instead of silent, a triage method for when more questions come in than I can answer at once, and a decision log that tracks whether a past recommendation actually got acted on. None of that shows up in a single query, but it's most of what the job actually is day to day.
 
 **Numbers to have ready, all reproducible:**
-- 34 pytest tests passing, CI on every push.
+- 48 pytest tests passing, CI on every push.
 - 40 dbt checks passing (28 column tests plus model-build checks), matching the Python pipeline's output exactly.
 - Churn model AUC: 0.6675, exactly reproducible via fixed random seeds.
 - WAU: 234 to 411 over 26 weeks (+75.6%).
@@ -929,7 +945,7 @@ Answering one question well is maybe half of it. I also built the parts around t
 
 ## The stack
 
-Python, SQL, Claude Code (7 agents, 9 skills), dbt (40 checks across 8 models), pytest (34 tests), GitHub Actions, Streamlit + Altair, scikit-learn, TF-IDF retrieval, Terraform (unapplied).
+Python, SQL, Claude Code (7 agents, 9 skills), dbt (40 checks across 8 models), pytest (48 tests), GitHub Actions, Streamlit + Altair, scikit-learn, TF-IDF retrieval, Terraform (unapplied).
 
 **Live dashboard:** [ai-data-analyst-claude-code.streamlit.app](https://ai-data-analyst-claude-code.streamlit.app/)
 **Code:** [github.com/rithikahaha/AI-Data-Analyst-Claude-Code](https://github.com/rithikahaha/AI-Data-Analyst-Claude-Code)

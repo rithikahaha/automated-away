@@ -7,7 +7,7 @@ I do data analysis for a living, and I got tired of spending 40 minutes writing 
 - Takes a plain-English business question and routes it to whichever specialist agent owns that kind of work
 - Answers with a number, a chart, the database query that produced it, and any caveats, never a bare stat
 - Runs against a realistic sample B2B SaaS dataset: accounts, users, subscriptions, product usage events
-- Backed by 40 automated data-quality checks and a 34-test suite on every code change
+- Backed by 40 automated data-quality checks and a 48-test suite on every code change
 - Refuses to fabricate a number it didn't get from a query
 
 ## Why 7 agents instead of 1 prompt
@@ -323,7 +323,7 @@ Integration-adopting accounts churned at 17.5% versus 27.1% for non-adopters, a 
 - run: pytest -v
 ```
 
-- 34 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration)
+- 48 automated tests, run automatically every time the code changes (this practice is called CI, continuous integration)
 - It rebuilds the entire sample database through the real pipeline before testing against it, so a broken pipeline gets caught, not just a broken individual query
 - Deployment plans exist for AWS, GCP, and Azure (Terraform, a way of writing infrastructure as code), explicitly illustrative and never applied to a real cloud account
 - Every agent talks to the warehouse through one connection string, so pointing this at a real Postgres or Snowflake warehouse instead of the local sample is a config change, not a rewrite
