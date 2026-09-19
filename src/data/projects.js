@@ -53,7 +53,7 @@ export const projects = [
     embedUrl: 'https://rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline/dashboard/',
     embedType: 'iframe',
     recommendation:
-      'Only 3.12% of customers ever order a second time, so this is not a story of shoppers slowly drifting away: almost nobody comes back at all. Focus on getting first-time buyers to buy again, and fix late deliveries first, because a late order is the strongest sign of a bad review.',
+      'Only 3.12% of customers ever buy a second time. Focus on getting first-time buyers to return, and fix late deliveries first, since they are the strongest sign of a bad review.',
     diagram: RevenueFlow,
     blog: 'https://medium.com/@rrithikaaa.h/only-3-12-of-customers-ever-buy-again-what-a-cohort-analysis-actually-found-712558de8e48',
   },
