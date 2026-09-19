@@ -17,7 +17,7 @@ export const projects = [
     demo: 'https://ai-data-analyst-claude-code.streamlit.app/',
     demoLabel: 'Live dashboard',
     recommendation:
-      'Put customer-success outreach on the Starter accounts the churn model scores highest, and run a real experiment on integration adoption before rolling it out.',
+      'In this sample company, customers on the cheapest plan cancel more than four times as often as those on the top plan (28.8% versus 6.7%). So the customer-success team should reach out first to the accounts the model rates most likely to cancel. One promising pattern, that customers who connect other tools stay longer, is not proven yet, so test it on a small group before changing anything.',
     diagram: AgentFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-gave-a-team-of-ai-agents-my-job-for-a-week-heres-where-i-caught-them-lying-7fe834a5f497',
   },
@@ -35,7 +35,7 @@ export const projects = [
     embedUrl: 'https://public.tableau.com/views/SupplyChainSLAAudit/SupplyChainSLAAudit',
     embedType: 'tableau',
     recommendation:
-      'Reset the First Class promise from 1 day to 2 and Second Class from 2 to 4, and leave Standard alone. Fix operations, not account management: the failure is the same across every spend tier.',
+      'Shipping promised delivery in 1 day (First Class) or 2 days (Second Class), but orders actually took about 2 and 4 days, so every First Class order arrived late. The fix is to promise 2 and 4 days instead: in a simulation that removed every First Class miss and halved the Second Class misses, and Standard shipping needs no change because it was already accurate. Late orders hit big and small spenders equally, so this is a shipping-operations problem, and a real pilot should confirm it first.',
     diagram: SupplyChainFlow,
     blog: 'https://medium.com/@rrithikaaa.h/i-audited-180-519-orders-and-found-a-promise-that-was-broken-100-of-the-time-6632b2cdd82b',
   },
@@ -53,7 +53,7 @@ export const projects = [
     embedUrl: 'https://rithikahaha.github.io/Scalable-E-commerce-Analytics-Pipeline/dashboard/',
     embedType: 'iframe',
     recommendation:
-      'Aim retention at turning first-time buyers into second-time buyers, and fix delivery reliability first, since late delivery is the strongest signal of a bad review.',
+      'Only 3.12% of customers ever order a second time, so this is not a story of shoppers slowly drifting away: almost nobody comes back at all. Focus on getting first-time buyers to buy again, and fix late deliveries first, because a late order is the strongest sign of a bad review.',
     diagram: RevenueFlow,
     blog: 'https://medium.com/@rrithikaaa.h/only-3-12-of-customers-ever-buy-again-what-a-cohort-analysis-actually-found-712558de8e48',
   },
