@@ -6,7 +6,7 @@ const proof = [
   { need: 'Python and statistics', shown: 'Random Forest and K-Means on 99,440 real orders, plus A/B test simulations, with the p-values reported honestly.' },
   { need: 'Dashboards people use', shown: 'Live Tableau and Plotly dashboards you can open from this page, plus a 5-page Power BI report.' },
   { need: 'Cloud warehouse and modern data stack', shown: 'Snowflake, AWS (S3, Glue, Athena) and dbt, with 40 automated data checks.' },
-  { need: 'Working with AI, not around it', shown: 'A 7-agent analyst built on Claude Code, and 3 Gemini workflows for Wayfair.' },
+  { need: 'Working with AI, not around it', shown: 'A 7-agent analyst built on Claude Code, and 5 n8n workflows for Wayfair.' },
   { need: 'Work that stays correct', shown: '48 automated tests, checks on every push, and health checks with stated targets.' },
 ]
 

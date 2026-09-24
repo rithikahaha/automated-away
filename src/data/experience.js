@@ -1,5 +1,6 @@
 import {
   FiActivity,
+  FiCheckSquare,
   FiBarChart2,
   FiCloud,
   FiCpu,
@@ -9,11 +10,13 @@ import {
   FiGrid,
   FiHash,
   FiLayers,
+  FiMessageSquare,
   FiMonitor,
   FiPieChart,
   FiSearch,
   FiTarget,
   FiTrendingUp,
+  FiZap,
 } from 'react-icons/fi'
 import { SiDocker, SiGithubactions, SiN8N, SiPython, SiScikitlearn, SiSnowflake, SiStreamlit, SiTerraform } from 'react-icons/si'
 
@@ -28,12 +31,12 @@ export const experience = [
     role: 'AI Agent Engineering & BI Extern',
     period: 'Apr 2026 - Sep 2026',
     tagline:
-      "Externed with Wayfair's Rugs category, wiring in AI workflows so trend and competitor tracking stop living in five different tabs.",
+      'Externed with Wayfair, turning scattered marketplace and social data into automated reports, then checking every number against its source.',
     bullets: [
-      'Automated 3 AI-powered workflows with Google Gemini, cutting manual report verification steps from five to two per report.',
-      "Unified trend, competitor, and insight tracking into one live dashboard, translating Wayfair's Rugs-category requirements into a single automated source of truth.",
+      'Engineered 5 n8n AI workflows (20 agent steps) that turn Amazon, Instagram, Pinterest, and blog data into automated reports, uncovering an open $300+ price tier across 30 products (Wayfair 10%, Amazon and Walmart 0%).',
+      'Verified every statistic against its source. Awarded Top Performer (top 10% of participants).',
     ],
-    tags: ['Google Gemini', 'Automation', 'Dashboards'],
+    tags: ['n8n', 'LLM Agents', 'Automation'],
   },
   {
     company: 'Extern',
@@ -123,6 +126,9 @@ export const skillGroups = [
     items: [
       { name: 'Claude Code (Agentic Workflows)', icon: FiCpu },
       { name: 'n8n', icon: SiN8N },
+      { name: 'LLM Prompt Engineering', icon: FiMessageSquare },
+      { name: 'Workflow Automation', icon: FiZap },
+      { name: 'Data Validation', icon: FiCheckSquare },
       { name: 'Git/GitHub Actions (CI/CD)', icon: SiGithubactions },
     ],
   },
